@@ -26,7 +26,4 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-          envFrom:
-            - secretRef:
-                name: dash-blocos-carnaval-envs
       restartPolicy: Always
