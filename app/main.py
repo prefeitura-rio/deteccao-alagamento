@@ -1,39 +1,37 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import pydeck as pdk
+from pathlib import Path
 
-chart_data = pd.DataFrame(
-    np.random.randn(1000, 2) / [50, 50] + [37.76, -122.4], columns=["lat", "lon"]
-)
+import numpy as np
+import pandas as pd
+import pydeck as pdk
+import streamlit as st
+
+tmp_data_path = Path(__file__).parent.parent / "data" / "cameras_h3_1.csv"
+chart_data = pd.read_csv(tmp_data_path)
 
 st.pydeck_chart(
     pdk.Deck(
         map_style=None,
         initial_view_state=pdk.ViewState(
-            latitude=37.76,
-            longitude=-122.4,
-            zoom=11,
-            pitch=50,
+            latitude=-22.93,
+            longitude=-43.41,
+            zoom=9,
+            pitch=0,
         ),
         layers=[
             pdk.Layer(
-                "HexagonLayer",
-                data=chart_data,
-                get_position="[lon, lat]",
-                radius=200,
-                elevation_scale=4,
-                elevation_range=[0, 1000],
-                pickable=True,
-                extruded=True,
-            ),
-            pdk.Layer(
                 "ScatterplotLayer",
                 data=chart_data,
-                get_position="[lon, lat]",
+                get_position="[longitude, latitude]",
                 get_color="[200, 30, 0, 160]",
                 get_radius=200,
             ),
         ],
+        tooltip={
+            "html": "<b>Camera:</b> {nome_da_camera}<br/><b>Status:</b> {status_right}",
+            "style": {
+                "backgroundColor": "steelblue",
+                "color": "white",
+            },
+        },
     )
 )
