@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deteccao-alagamento
+  namespace: deteccao-alagamento
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deteccao-alagamento
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: deteccao-alagamento
+    spec:
+      containers:
+        - name: deteccao-alagamento
+          image: gcr.io/PROJECT_ID/IMAGE_NAME:TAG
+          ports:
+            - containerPort: 8501
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          envFrom:
+            - secretRef:
+                name: dash-blocos-carnaval-envs
+      restartPolicy: Always

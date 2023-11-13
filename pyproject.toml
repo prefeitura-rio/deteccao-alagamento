@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "deteccao-alagamento"
+version = "0.1.0"
+description = ""
+authors = ["Gabriel Gazola Milan <gabriel.gazola@poli.ufrj.br>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+streamlit = "^1.28.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
