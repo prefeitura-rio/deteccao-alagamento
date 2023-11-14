@@ -1,11 +1,8 @@
 from pathlib import Path
 import folium
-import numpy as np
 import pandas as pd
-import pydeck as pdk
 import streamlit as st
 from streamlit_folium import st_folium
-from streamlit_extras.app_logo import add_logo
 
 st.set_page_config(layout="wide", page_title="Alagamentos em Tempo Real")
 

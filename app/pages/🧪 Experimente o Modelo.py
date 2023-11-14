@@ -1,5 +1,4 @@
 import streamlit as st
-from PIL import Image
 
 from model import run_model
 
