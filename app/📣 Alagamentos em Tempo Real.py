@@ -5,11 +5,19 @@ import pandas as pd
 import pydeck as pdk
 import streamlit as st
 from streamlit_folium import st_folium
+from streamlit_extras.app_logo import add_logo
 
 st.set_page_config(layout="wide", page_title="Alagamentos em Tempo Real")
 
+st.image("./data/logo/logo.png", width=300)
+
 st.markdown("# Alagamentos em Tempo Real usando IA")
-st.markdown("##### Detector de alagamentos em tempo real usando a API do OpenAI")
+st.markdown(
+    """Esta aplicação usa as câmeras instaladas na cidade para detectar alagamentos e 
+    bolsões de água em tempo real. A AI é ativada automaticamente nas regiões que 
+    estão chovendo segundo os pluviômetros da cidade. Ela usa o modelo GPT-4 Vision para
+    identificar alagamentos em imagens."""
+)
 
 tmp_data_path = Path(__file__).parent.parent / "data" / "cameras_h3_1.csv"
 chart_data = pd.read_csv(tmp_data_path)[:100]
@@ -23,7 +31,6 @@ chart_data.to_csv(index=False)
 m = folium.Map(
     location=[chart_data["latitude"].mean(), chart_data["longitude"].mean()],
     zoom_start=11,
-    # tiles="Stamen Terrain",
 )
 
 for i in range(0, len(chart_data)):
