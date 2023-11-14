@@ -16,7 +16,7 @@ icon_data = {
 }
 
 tmp_data_path = Path(__file__).parent.parent / "data" / "cameras_h3_1.csv"
-chart_data = pd.read_csv(tmp_data_path)
+chart_data = pd.read_csv(tmp_data_path)[:10]
 chart_data["icon_data"] = None
 for i in chart_data.index:
     chart_data["icon_data"][i] = icon_data
