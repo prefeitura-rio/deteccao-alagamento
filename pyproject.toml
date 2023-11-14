@@ -11,6 +11,8 @@ streamlit = "^1.28.1"
 folium = "0.14.0"
 streamlit-folium = "^0.15.1"
 streamlit-extras = "^0.3.5"
+streamlit-autorefresh = "^1.0.1"
+pillow = "^10.1.0"
 
 
 [build-system]

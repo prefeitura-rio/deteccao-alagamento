@@ -11,7 +11,10 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Install virtualenv and create a virtual environment
-RUN pip install --no-cache-dir -U poetry && \
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y ffmpeg libsm6 libxext6 && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir -U poetry && \
     poetry config virtualenvs.create false
 
 # Copy the poetry.lock and pyproject.toml files
