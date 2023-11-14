@@ -1,52 +1,81 @@
 from pathlib import Path
-
+import folium
 import numpy as np
 import pandas as pd
 import pydeck as pdk
 import streamlit as st
+from streamlit_folium import st_folium
 
-ICON_URL = "https://cdn-icons-png.flaticon.com/512/2060/2060364.png"
-icon_data = {
-    # Icon from Wikimedia, used the Creative Commons Attribution-Share Alike 3.0
-    # Unported, 2.5 Generic, 2.0 Generic and 1.0 Generic licenses
-    "url": ICON_URL,
-    "width": 242,
-    "height": 242,
-    "anchorY": 242,
-}
+st.set_page_config(layout="wide", page_title="Alagamentos em Tempo Real")
+
+st.markdown("# Alagamentos em Tempo Real usando IA")
+st.markdown("##### Detector de alagamentos em tempo real usando a API do OpenAI")
 
 tmp_data_path = Path(__file__).parent.parent / "data" / "cameras_h3_1.csv"
-chart_data = pd.read_csv(tmp_data_path)[:10]
-chart_data["icon_data"] = None
-for i in chart_data.index:
-    chart_data["icon_data"][i] = icon_data
+chart_data = pd.read_csv(tmp_data_path)[:100]
+# dropna status_right from chart_data
+chart_data = chart_data.dropna(subset=["status_right"])
+# remove all Unnamed columns
+chart_data = chart_data.loc[:, ~chart_data.columns.str.contains("^Unnamed")]
+chart_data.to_csv(index=False)
 
-st.pydeck_chart(
-    pdk.Deck(
-        map_style=None,
-        initial_view_state=pdk.ViewState(
-            latitude=-22.93,
-            longitude=-43.41,
-            zoom=9,
-            pitch=0,
-        ),
-        layers=[
-            pdk.Layer(
-                "IconLayer",
-                data=chart_data,
-                get_icon="icon_data",
-                get_position="[longitude, latitude]",
-                get_size=4,
-                size_scale=5,
-                pickable=True,
-            ),
-        ],
-        tooltip={
-            "html": "<b>Camera:</b> {nome_da_camera}<br/><b>Status:</b> {status_right}",
-            "style": {
-                "backgroundColor": "steelblue",
-                "color": "white",
-            },
-        },
-    )
+# center map on the mean of the coordinates
+m = folium.Map(
+    location=[chart_data["latitude"].mean(), chart_data["longitude"].mean()],
+    zoom_start=11,
+    # tiles="Stamen Terrain",
 )
+
+for i in range(0, len(chart_data)):
+    folium.Marker(
+        location=[chart_data.iloc[i]["latitude"], chart_data.iloc[i]["longitude"]],
+        # add nome_da_camera and status to tooltip
+        tooltip=f"""
+        Status: {chart_data.iloc[i]['status']}<br>
+        Endereço: {chart_data.iloc[i]['nome_da_camera']}""",
+        # change icon color according to status
+        icon=folium.Icon(
+            color="green" if chart_data.iloc[i]["status"] == "normal" else "red"
+        ),
+        # icon=folium.CustomIcon(
+        #     icon_data["url"],
+        #     icon_size=(icon_data["width"], icon_data["height"]),
+        #     icon_anchor=(icon_data["width"] / 2, icon_data["height"]),
+        # ),
+    ).add_to(m)
+
+
+map_data = st_folium(m, key="fig1", height=600, width=1200)
+
+# select chart_data obj based on last_object_clicked coordinates
+obj_coord = map_data["last_object_clicked"]
+
+
+if obj_coord is None:
+    st.write("Clique em um marcador para ver os detalhes")
+else:
+    selected_data = chart_data[
+        (chart_data["latitude"] == obj_coord["lat"])
+        & (chart_data["longitude"] == obj_coord["lng"])
+    ]
+
+    selected_data = (
+        selected_data[["nome_da_camera", "bairro", "zona", "chuva_15min", "rtsp"]]
+        .rename(
+            columns={
+                "nome_da_camera": "Endereço",
+                "bairro": "Bairro",
+                "zona": "Zona",
+                "chuva_15min": "🌧️ Chuva 15min",
+                "rtsp": "🎥 Camera",
+            }
+        )
+        .T
+    )
+
+    selected_data.columns = ["Infos"]
+
+    st.markdown("## 📷 Imagem da Camera")
+    st.image("./data/imgs/flooded1.jpg")
+
+    selected_data
