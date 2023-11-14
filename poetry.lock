@@ -54,6 +54,20 @@ files = [
 ]
 
 [[package]]
+name = "branca"
+version = "0.7.0"
+description = "Generate complex HTML+JS pages with Python"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "branca-0.7.0-py3-none-any.whl", hash = "sha256:c653d9a3fef1e6cd203757c77d3eb44810f11998506451f9a27d52b983500c16"},
+    {file = "branca-0.7.0.tar.gz", hash = "sha256:503ccb589a9ee9464cb7b5b17e5ffd8d5082c5c28624197f58f20d4d377a68bb"},
+]
+
+[package.dependencies]
+jinja2 = "*"
+
+[[package]]
 name = "cachetools"
 version = "5.3.2"
 description = "Extensible memoizing collections and decorators"
@@ -198,6 +212,26 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+
+[[package]]
+name = "folium"
+version = "0.14.0"
+description = "Make beautiful maps with Leaflet.js & Python"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "folium-0.14.0-py2.py3-none-any.whl", hash = "sha256:c894e2c029a8ca40e043a311978a895cefe32d746a94263f807dd7b6b2e9c679"},
+    {file = "folium-0.14.0.tar.gz", hash = "sha256:8ec44697d18f5932e0fdaee8b19da98625de4d0e72cb30ef56f9479f18e11b9f"},
+]
+
+[package.dependencies]
+branca = ">=0.6.0"
+jinja2 = ">=2.9"
+numpy = "*"
+requests = "*"
+
+[package.extras]
+testing = ["pytest"]
 
 [[package]]
 name = "gitdb"
@@ -947,6 +981,23 @@ watchdog = {version = ">=2.1.5", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python (>=0.9.0)"]
 
 [[package]]
+name = "streamlit-folium"
+version = "0.15.1"
+description = "Render Folium objects in Streamlit"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "streamlit_folium-0.15.1-py3-none-any.whl", hash = "sha256:68d2e61311a6f8eb26fd5395d10b5048e33cbb5ae7ce6337d9b536335825f684"},
+    {file = "streamlit_folium-0.15.1.tar.gz", hash = "sha256:6e2539f6f0d0663f480a665890af02cb94103d678cf4d22a2d7f45c34d364203"},
+]
+
+[package.dependencies]
+branca = "*"
+folium = ">=0.13"
+jinja2 = "*"
+streamlit = ">=1.13.0"
+
+[[package]]
 name = "tenacity"
 version = "8.2.3"
 description = "Retry code until it succeeds"
@@ -1136,4 +1187,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "50a6e383386b5b3fa3b1071776d35e6959a7749340be0fe7db8e962774a5f9f8"
+content-hash = "4b63a16bb2379e9b07d12cf7d7775acec3b53c08a81e1cbe930e304f932d3bde"
