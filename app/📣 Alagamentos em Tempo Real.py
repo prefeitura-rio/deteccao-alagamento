@@ -1,6 +1,7 @@
 import base64
 from datetime import datetime
 import io
+from typing import Union
 
 import folium
 import pandas as pd
@@ -54,6 +55,55 @@ try:
     #             },
     #         ],
     #     },
+    #     {
+    #         "datetime": "2023-11-14 19:01:26",
+    #         "id_camera": "001",
+    #         "url_camera": "rtsp://url:port",
+    #         "latitude": -22.882833,
+    #         "longitude": -43.371461,
+    #         "image_base64": base64.b64encode(
+    #             open("./data/imgs/flooded2.jpg", "rb").read()
+    #         ).decode("utf-8"),
+    #         "ai_classification": [
+    #             {
+    #                 "object": "alagamento",
+    #                 "label": False,
+    #                 "confidence": 0.7,
+    #             },
+    #         ],
+    #     },
+    #     {
+    #         "datetime": "2023-11-14 19:01:26",
+    #         "id_camera": "001",
+    #         "url_camera": "rtsp://url:port",
+    #         "latitude": -22.881833,
+    #         "longitude": -43.372461,
+    #         "image_base64": base64.b64encode(
+    #             open("./data/imgs/flooded2.jpg", "rb").read()
+    #         ).decode("utf-8"),
+    #         "ai_classification": [
+    #             {
+    #                 "object": "alagamento",
+    #                 "label": None,
+    #                 "confidence": 0.7,
+    #             },
+    #         ],
+    #     },
+    #     {
+    #         "datetime": "2023-11-14 19:01:26",
+    #         "id_camera": "001",
+    #         "url_camera": "rtsp://url:port",
+    #         "latitude": -22.882833,
+    #         "longitude": -43.372461,
+    #         "image_base64": None,
+    #         "ai_classification": [
+    #             {
+    #                 "object": "alagamento",
+    #                 "label": None,
+    #                 "confidence": 0.7,
+    #             },
+    #         ],
+    #     },
     # ]
     last_update = requests.get(
         "https://api.dados.rio/v2/clima_alagamento/ultima_atualizacao_alagamento_detectado_ia/"
@@ -83,6 +133,16 @@ if len(chart_data) > 0:
 else:
     m = folium.Map(location=[-22.917690, -43.413861], zoom_start=11)
 
+
+def get_icon_color(label: Union[bool, None]):
+    if label:
+        return "orange"
+    elif label is None:
+        return "gray"
+    else:
+        return "green"
+
+
 for i in range(0, len(chart_data)):
     folium.Marker(
         location=[chart_data.iloc[i]["latitude"], chart_data.iloc[i]["longitude"]],
@@ -90,7 +150,9 @@ for i in range(0, len(chart_data)):
         tooltip=f"""
         ID: {chart_data.iloc[i]['id_camera']}""",
         # change icon color according to status
-        icon=folium.Icon(color="orange"),
+        icon=folium.Icon(
+            color=get_icon_color(chart_data.iloc[i]["ai_classification"][0]["label"])
+        ),
         # icon=folium.CustomIcon(
         #     icon_data["url"],
         #     icon_size=(icon_data["width"], icon_data["height"]),
@@ -129,6 +191,9 @@ else:
     selected_data.columns = ["Infos"]
 
     st.markdown("### 📷 Imagem da Câmera")
-    st.image(generate_image(image_b64))
+    if image_b64 is None:
+        st.markdown("Não foi possível acessar a câmera.")
+    else:
+        st.image(generate_image(image_b64))
 
     selected_data
