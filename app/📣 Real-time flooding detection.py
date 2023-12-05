@@ -10,16 +10,16 @@ import requests
 import streamlit as st
 from streamlit_folium import st_folium
 
-st.set_page_config(layout="wide", page_title="Alagamentos em Tempo Real")
+st.set_page_config(layout="wide", page_title="Real-time flooding detection")
 
 st.image("./data/logo/logo.png", width=300)
 
-st.markdown("# Alagamentos em Tempo Real usando IA")
+st.markdown("# Real-time flooding detection using AI")
 st.markdown(
-    """Esta aplicação usa as câmeras instaladas na cidade para detectar alagamentos e 
-    bolsões de água em tempo real. A AI é ativada automaticamente nas regiões que 
-    estão chovendo segundo os pluviômetros da cidade. Ela usa o modelo GPT-4 Vision para
-    identificar alagamentos em imagens."""
+    """This application uses the cameras installed in the city to detect floods and 
+    pockets of water in real time. The AI is automatically activated in regions where 
+    it is raining according to the city's rain gauges. It uses the GPT-4 Vision model 
+    to identify floods in images."""
 )
 
 
@@ -116,9 +116,9 @@ except Exception as exc:
 
 st.markdown(
     f"""
-    **Conexão com API**: {"✅" if not st.session_state["error"] else "❌"}
+    **API status**: {"✅" if not st.session_state["error"] else "❌"}
 
-    **Última atualização**: {datetime.strptime(last_update, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M:%S")}
+    **Last update**: {datetime.strptime(last_update, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")}
 """,
 )
 
@@ -168,7 +168,7 @@ obj_coord = map_data["last_object_clicked"]
 
 
 if obj_coord is None:
-    st.write("Clique em um marcador para ver os detalhes")
+    st.write("Click on a marker to view the details")
 else:
     selected_data = chart_data[
         (chart_data["latitude"] == obj_coord["lat"])
@@ -181,18 +181,18 @@ else:
         selected_data[["id_camera", "url_camera"]]
         .rename(
             columns={
-                "id_camera": "Identificador",
-                "url_camera": "🎥 Camera",
+                "id_camera": "ID",
+                "url_camera": "🎥 Feed",
             }
         )
         .T
     )
 
-    selected_data.columns = ["Infos"]
+    selected_data.columns = ["Informations"]
 
-    st.markdown("### 📷 Imagem da Câmera")
+    st.markdown("### 📷 Camera snapshot")
     if image_b64 is None:
-        st.markdown("Não foi possível acessar a câmera.")
+        st.markdown("Failed to get snapshot from the camera.")
     else:
         st.image(generate_image(image_b64))
 
