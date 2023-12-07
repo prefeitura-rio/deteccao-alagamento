@@ -11,10 +11,10 @@ st.markdown("# Identify a flood through an image")
 
 col1, col2, col3, col4 = st.columns([1, 0.5, 0.5, 1])
 
-picture = st.camera_input("Take a picture")
+picture = st.file_uploader("Upload an image")
 if picture is not None:
     if picture.size > MAX_FILE_SIZE:
-        st.error(
+        St.error(
             "The uploaded file is too large. Please upload an image smaller than 5MB."
         )
     else:
