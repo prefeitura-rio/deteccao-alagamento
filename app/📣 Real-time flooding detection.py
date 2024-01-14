@@ -151,7 +151,9 @@ for i in range(0, len(chart_data)):
         ID: {chart_data.iloc[i]['id_camera']}""",
         # change icon color according to status
         icon=folium.Icon(
-            color=get_icon_color(chart_data.iloc[i]["ai_classification"][0]["label"])
+            color=get_icon_color(
+                chart_data.iloc[i]["ai_classification"][0].get("label", None)
+            )
         ),
         # icon=folium.CustomIcon(
         #     icon_data["url"],
