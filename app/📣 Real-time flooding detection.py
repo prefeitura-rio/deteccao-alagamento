@@ -144,17 +144,16 @@ def get_icon_color(label: Union[bool, None]):
 
 
 for i in range(0, len(chart_data)):
+    ai_classification = chart_data.iloc[i].get("ai_classification", [])
+    if ai_classification == []:
+        ai_classification = [{"label": None}]
     folium.Marker(
         location=[chart_data.iloc[i]["latitude"], chart_data.iloc[i]["longitude"]],
         # add nome_da_camera and status to tooltip
         tooltip=f"""
         ID: {chart_data.iloc[i]['id_camera']}""",
         # change icon color according to status
-        icon=folium.Icon(
-            color=get_icon_color(
-                chart_data.iloc[i]["ai_classification"][0].get("label", None)
-            )
-        ),
+        icon=folium.Icon(color=get_icon_color(ai_classification[0].get("label", None))),
         # icon=folium.CustomIcon(
         #     icon_data["url"],
         #     icon_size=(icon_data["width"], icon_data["height"]),
