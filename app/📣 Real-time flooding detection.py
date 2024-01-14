@@ -176,7 +176,7 @@ else:
         & (chart_data["longitude"] == obj_coord["lng"])
     ]
 
-    image_b64 = selected_data["image_base64"].values[0]
+    image_b64 = selected_data.get("image_base64", None)
 
     selected_data = (
         selected_data[["id_camera", "url_camera"]]
