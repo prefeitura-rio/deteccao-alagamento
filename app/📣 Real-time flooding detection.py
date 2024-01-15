@@ -1,11 +1,8 @@
-import base64
 from datetime import datetime
-import io
 from typing import Union
 
 import folium
 import pandas as pd
-from PIL import Image
 import requests
 import streamlit as st
 from streamlit_folium import st_folium
@@ -23,13 +20,6 @@ st.markdown(
 )
 
 
-def generate_image(image_b64: str) -> Image:
-    """Generate image from base64 string"""
-    image_bytes = base64.b64decode(image_b64)
-    image = Image.open(io.BytesIO(image_bytes))
-    return image
-
-
 if "error" not in st.session_state:
     st.session_state["error"] = False
 
@@ -44,9 +34,7 @@ try:
     #         "url_camera": "rtsp://url:port",
     #         "latitude": -22.881833,
     #         "longitude": -43.371461,
-    #         "image_base64": base64.b64encode(
-    #             open("./data/imgs/flooded2.jpg", "rb").read()
-    #         ).decode("utf-8"),
+    #         "image_url": "https://storage.googleapis.com/datario-public/flooding_detection/latest_snapshots/000326.png",
     #         "ai_classification": [
     #             {
     #                 "object": "alagamento",
@@ -61,9 +49,7 @@ try:
     #         "url_camera": "rtsp://url:port",
     #         "latitude": -22.882833,
     #         "longitude": -43.371461,
-    #         "image_base64": base64.b64encode(
-    #             open("./data/imgs/flooded2.jpg", "rb").read()
-    #         ).decode("utf-8"),
+    #         "image_url": "https://storage.googleapis.com/datario-public/flooding_detection/latest_snapshots/000326.png",
     #         "ai_classification": [
     #             {
     #                 "object": "alagamento",
@@ -78,9 +64,7 @@ try:
     #         "url_camera": "rtsp://url:port",
     #         "latitude": -22.881833,
     #         "longitude": -43.372461,
-    #         "image_base64": base64.b64encode(
-    #             open("./data/imgs/flooded2.jpg", "rb").read()
-    #         ).decode("utf-8"),
+    #         "image_url": "https://storage.googleapis.com/datario-public/flooding_detection/latest_snapshots/000326.png",
     #         "ai_classification": [
     #             {
     #                 "object": "alagamento",
@@ -95,7 +79,7 @@ try:
     #         "url_camera": "rtsp://url:port",
     #         "latitude": -22.882833,
     #         "longitude": -43.372461,
-    #         "image_base64": None,
+    #         "image_url": None,
     #         "ai_classification": [
     #             {
     #                 "object": "alagamento",
@@ -176,7 +160,7 @@ else:
         & (chart_data["longitude"] == obj_coord["lng"])
     ]
 
-    image_b64 = selected_data.get("image_base64", None)
+    image_url = selected_data.get("image_url", None)
 
     selected_data = (
         selected_data[["id_camera", "url_camera"]]
@@ -192,9 +176,9 @@ else:
     selected_data.columns = ["Informations"]
 
     st.markdown("### 📷 Camera snapshot")
-    if image_b64 is None:
+    if image_url is None:
         st.markdown("Failed to get snapshot from the camera.")
     else:
-        st.image(generate_image(image_b64))
+        st.image(image_url)
 
     selected_data
