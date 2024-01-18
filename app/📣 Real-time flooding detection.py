@@ -160,8 +160,7 @@ else:
         & (chart_data["longitude"] == obj_coord["lng"])
     ]
 
-    image_url = selected_data.get("image_url", None)
-
+    image_url = selected_data["image_url"].values[0]
     selected_data = (
         selected_data[["id_camera", "url_camera"]]
         .rename(
