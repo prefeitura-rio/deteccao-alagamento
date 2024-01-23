@@ -99,7 +99,6 @@ def get_table_cameras_with_images(dataframe):
         "emoji",
         "id_camera",
         "object",
-        "url_camera",
         "image_url",
     ]
     table_data = table_data[col_order]
@@ -126,7 +125,6 @@ st.markdown(
 """,
 )
 
-
 st.dataframe(
     data_with_image,
     column_config={
@@ -145,13 +143,7 @@ st.dataframe(
             # width="medium",
             required=True,
         ),
-        "url_camera": st.column_config.Column(
-            "URL Camera",
-            help="ID Camera",
-            # width="medium",
-            required=True,
-        ),
-        "image_url": st.column_config.Column(
+        "image_url": st.column_config.LinkColumn(
             "URL Imagem",
             help="ID Camera",
             # width="medium",
