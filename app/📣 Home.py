@@ -229,10 +229,6 @@ else:
         & (pontos_criticos["longitude"] == obj_coord["lng"])
     ]
 
-    #     print(selected_data)
-
-    #     #     image_b64 = selected_data["image_base64"].values[0]
-
     selected_data = (
         selected_data[["endereco", "Detalhe", "Obs", "Status"]]
         # .rename(

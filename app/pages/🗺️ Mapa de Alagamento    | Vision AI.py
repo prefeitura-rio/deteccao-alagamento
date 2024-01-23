@@ -53,7 +53,7 @@ def create_map(chart_data):
 
 
 @st.cache_data
-def load_alagamento_tectado_ia():
+def load_alagamento_detectado_ia():
     raw_api_data = requests.get(
         "https://api.dados.rio/v2/clima_alagamento/alagamento_detectado_ia/"
     ).json()
@@ -66,7 +66,7 @@ def load_alagamento_tectado_ia():
     return pd.DataFrame(raw_api_data), last_update
 
 
-chart_data, last_update = load_alagamento_tectado_ia()
+chart_data, last_update = load_alagamento_detectado_ia()
 
 folium_map = create_map(chart_data)
 
