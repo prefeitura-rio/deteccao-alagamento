@@ -1,9 +1,24 @@
+import datetime
+from typing import Union
 import folium
 import pandas as pd
 
 import requests
 import streamlit as st
 from streamlit_folium import st_folium
+
+
+st.set_page_config(layout="wide")
+st.image("./data/logo/logo.png", width=300)
+
+
+def get_icon_color(label: Union[bool, None]):
+    if label:
+        return "red"
+    elif label is None:
+        return "gray"
+    else:
+        return "green"
 
 
 def create_map(chart_data):
@@ -18,18 +33,19 @@ def create_map(chart_data):
         m = folium.Map(location=[-22.917690, -43.413861], zoom_start=11)
 
     for i in range(0, len(chart_data)):
+        ai_classification = chart_data.iloc[i].get("ai_classification", [])
+        if ai_classification == []:
+            ai_classification = [{"label": None}]
         folium.Marker(
             location=[chart_data.iloc[i]["latitude"], chart_data.iloc[i]["longitude"]],
             # add nome_da_camera and status to tooltip
             tooltip=f"""
-            {chart_data.iloc[i]['status_emoji']}  {chart_data.iloc[i]['status_15min']}<br>
-            {chart_data.iloc[i]['endereco']}<br>
-            {chart_data.iloc[i]['Detalhe']}""",
+            ID: {chart_data.iloc[i]['id_camera']}""",
             # change icon color according to status
             icon=folium.features.DivIcon(
                 icon_size=(15, 15),
                 icon_anchor=(7, 7),
-                html=f'<div style="width: 10px; height: 10px; background-color: {chart_data.iloc[i]["color"]}; border: 1px solid black; border-radius: 50%;"></div>',
+                html=f'<div style="width: 20px; height: 20px; background-color: {get_icon_color(ai_classification[0].get("label", None))}; border: 2px solid black; border-radius: 70%;"></div>',
             ),
         ).add_to(m)
 
@@ -37,211 +53,65 @@ def create_map(chart_data):
 
 
 @st.cache_data
-def load_pontos_criticos():
-    return pd.read_csv("data/database/pontos_criticos.csv")
-
-
-@st.cache_data
-def load_precipitacao():
-    precipitacao_15min = pd.read_json(
-        "https://api.dados.rio/v2/clima_pluviometro/precipitacao_15min/"
-    )[["id_h3", "chuva_15min", "status", "color"]].rename(
-        columns={"status": "status_15min"}
-    )
-    precipitacao_120min = pd.read_json(
-        "https://api.dados.rio/v2/clima_pluviometro/precipitacao_120min/"
-    )[["id_h3", "chuva_15min", "status"]].rename(
-        columns={"chuva_15min": "chuva_120min", "status": "status_120min"}
+def load_alagamento_detectado_ia():
+    raw_api_data = requests.get(
+        "https://api.dados.rio/v2/clima_alagamento/alagamento_detectado_ia/"
+    ).json()
+    last_update = pd.to_datetime(
+        requests.get(
+            "https://api.dados.rio/v2/clima_alagamento/ultima_atualizacao_alagamento_detectado_ia/"
+        ).text.strip('"')
     )
 
-    return pd.merge(precipitacao_120min, precipitacao_15min, on="id_h3")
+    return pd.DataFrame(raw_api_data), last_update
 
 
-# Define a function to map status to emoji
-def status_to_emoji(status):
-    if status == "chuva forte":
-        return "🔴"
-    elif status == "chuva moderada":
-        return "🟠"
-    elif status == "chuva muito forte":
-        return "🟣"
-    else:
-        return "🟢"
+chart_data, last_update = load_alagamento_detectado_ia()
 
+folium_map = create_map(chart_data)
 
-# Define a function to map status to color code
-def status_to_color(status):
-    if status == "chuva forte":
-        return "#FF0000"  # red
-    elif status == "chuva moderada":
-        return "#FF8C00"  # yellow
-    elif status == "chuva muito forte":
-        return "#800080"  # purple
-    else:
-        return "#008000"  # green
+## front
 
+st.markdown("# Mapa de Alagamentos | Vision AI")
 
-# @st.cache_data()
-def update_precipitacao():
-    """Add precipitation data to pontos_criticos DataFrame. Always update the precipitation data."""
-
-    df = load_pontos_criticos()
-    precipitacao = load_precipitacao()
-
-    # Drop the existing columns in pontos_criticos that are also in precipitacao
-    # expect h3_id
-    df.drop(
-        columns=[
-            col for col in df.columns if col in precipitacao.columns and col != "id_h3"
-        ],
-        inplace=True,
-    )
-
-    # Merge the dataframes, replacing the precipitation data in pontos_criticos
-    df_merge = pd.merge(df, precipitacao, on="id_h3", how="left")
-
-    # Add a new column with emojis
-    df_merge["status_emoji"] = df_merge["status_15min"].apply(status_to_emoji)
-
-    # Add a new column with color codes
-    df_merge["color"] = df_merge["status_15min"].apply(status_to_color)
-
-    return df_merge
-
-
-@st.cache_data(ttl=60)
-def get_apis_last_updates():
-    last_updates = [
-        {
-            "alagamento_ia": pd.to_datetime(
-                requests.get(
-                    "https://api.dados.rio/v2/clima_alagamento/ultima_atualizacao_alagamento_detectado_ia/"
-                ).text.strip('"')
-            ),
-            "precipitacao_15min": pd.to_datetime(
-                requests.get(
-                    "https://api.dados.rio/v2/clima_pluviometro/ultima_atualizacao_precipitacao_15min/"
-                ).text.strip('"'),
-                dayfirst=True,
-            ),
-            "precipitacao_120min": pd.to_datetime(
-                requests.get(
-                    "https://api.dados.rio/v2/clima_pluviometro/ultima_atualizacao_precipitacao_120min/"
-                ).text.strip('"'),
-                dayfirst=True,
-            ),
-        }
-    ]
-    return pd.DataFrame(last_updates).T.rename(columns={0: "Última Atualização"})
-
-
-# #### FRONTEND ####
-
-st.set_page_config(layout="wide")
-st.image("./data/logo/logo.png", width=300)
-
-st.sidebar.dataframe(get_apis_last_updates())
-
-st.markdown("### Acompanhe os Pontos Críticos em Tempo Real")
-
-pontos_criticos = update_precipitacao()
-
-## Tabela com pontos de atenção
-st.dataframe(
-    pontos_criticos[
-        [
-            "status_emoji",
-            "bairro",
-            "endereco",
-            "status_15min",
-            "status_120min",
-            "chuva_15min",
-            "chuva_120min",
-        ]
-    ].sort_values(by=["chuva_15min"], ascending=False),
-    column_config={
-        "status_emoji": st.column_config.Column(
-            "",
-        ),
-        "bairro": st.column_config.Column(
-            "Bairro",
-            help="Bairro",
-            # width="medium",
-            required=True,
-        ),
-        "endereco": st.column_config.Column(
-            "Endereço",
-            help="Endereço aproximado",
-            # width="medium",
-            required=True,
-        ),
-        "status_15min": st.column_config.Column(
-            "Status 15 min",
-            help="Status da precipitação nos últimos 15 minutos",
-            # width="medium",
-            required=True,
-        ),
-        "chuva_15min": st.column_config.Column(
-            "Acumulado 15 min",
-            help="Precipitação acumulada nos últimos 15 minutos",
-            # width="medium",
-            required=True,
-        ),
-        "status_120min": st.column_config.Column(
-            "Status 120 min",
-            help="Status da precipitação nos últimos 120 minutos",
-            # width="medium",
-            # required=True,
-        ),
-        "chuva_120min": st.column_config.Column(
-            "Acumulado 120 min",
-            help="Precipitação acumulada nos últimos 120 minutos",
-            # width="medium",
-            # required=True,
-        ),
-    },
-    hide_index=True,
-    use_container_width=True,
+st.markdown(
+    f"""
+    **Last update**: {str(last_update)}
+""",
 )
 
-# # Mapa
-# folium_map = create_map(pontos_criticos)  # replace with your map generation code
+map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
 
-folium_map = create_map(pontos_criticos)
-# call to render Folium map in Streamlit
-map_data = st_folium(
-    folium_map,
-    key="fig1",
-    height=600,
-    width=1200,
-    # returned_objects=["last_object_clicked"],
-)
-
-# # select pontos_criticos obj based on last_object_clicked coordinates
+# select chart_data obj based on last_object_clicked coordinates
 obj_coord = map_data["last_object_clicked"]
 
-# # info adicional quando objeto é clicado
+
 if obj_coord is None:
-    st.write("Clique em um marcador para ver os detalhes")
+    st.write("Click on a marker to view the details")
 else:
-    selected_data = pontos_criticos[
-        (pontos_criticos["latitude"] == obj_coord["lat"])
-        & (pontos_criticos["longitude"] == obj_coord["lng"])
+    selected_data = chart_data[
+        (chart_data["latitude"] == obj_coord["lat"])
+        & (chart_data["longitude"] == obj_coord["lng"])
     ]
 
+    image_url = selected_data["image_url"].values[0]
     selected_data = (
-        selected_data[["endereco", "Detalhe", "Obs", "Status"]]
-        # .rename(
-        #     columns={
-        #         "id_camera": "Identificador",
-        #         "url_camera": "🎥 Camera",
-        #     }
-        # )
+        selected_data[["id_camera", "url_camera"]]
+        .rename(
+            columns={
+                "id_camera": "ID",
+                "url_camera": "🎥 Feed",
+            }
+        )
         .T
     )
-    selected_data.columns = ["Infos"]
 
-    #     #     st.markdown("### 📷 Imagem da Câmera")
-    #     #     st.image(generate_image(image_b64))
+    selected_data.columns = ["Informations"]
+
+    st.markdown("### 📷 Camera snapshot")
+    if image_url is None:
+        st.markdown("Failed to get snapshot from the camera.")
+    else:
+        st.image(image_url)
 
     selected_data

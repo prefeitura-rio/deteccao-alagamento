@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 
-st.set_page_config(layout="wide", page_title="Experimente o Modelo")
+st.set_page_config(layout="wide", page_title="Pontos de Alagamento")
 st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Pontos de Alagamento | Vision AI")
