@@ -39,3 +39,18 @@ def load_alagamento_detectado_ia():
 
 
 chart_data, last_update = load_alagamento_detectado_ia()
+
+
+# Display images in a grid
+num_columns = 2
+num_rows = (len(chart_data) + num_columns - 1) // num_columns
+
+for row in range(num_rows):
+    cols = st.columns(num_columns)
+    for col in range(num_columns):
+        index = row * num_columns + col
+        if index < len(chart_data):
+            with cols[col]:
+                st.subheader(f"Camera ID: {chart_data.iloc[index]['id_camera']}")
+                st.write(f"Last Update: {last_update}")
+                st.image(chart_data.iloc[index]["image_url"], use_column_width=True)
