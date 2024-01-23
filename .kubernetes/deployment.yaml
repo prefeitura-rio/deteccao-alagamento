@@ -4,7 +4,7 @@ metadata:
   name: deteccao-alagamento
   namespace: deteccao-alagamento
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: deteccao-alagamento
@@ -25,7 +25,7 @@ spec:
           resources:
             requests:
               memory: "1Gi"
-              cpu: "250m"
+              cpu: "500m"
             limits:
               memory: "1Gi"
               cpu: "500m"

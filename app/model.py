@@ -64,7 +64,7 @@ def get_ai_label(response):
 
 def run_model(img, prompt):
     base64_image = encode_image_to_base64(img)
-
     response = vision_ai_classify_image(base64_image, prompt)
 
     return get_ai_label(response)
+
