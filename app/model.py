@@ -21,7 +21,7 @@ def encode_image_to_base64(image):
     return base64.b64encode(bytes_data).decode("utf-8")
 
 
-def vision_ai_classify_image(base64_image):
+def vision_ai_classify_image(base64_image, prompt):
     # read OPENAI_API_KEY env
     api_key = os.environ.get("OPENAI_API_KEY")
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
@@ -34,20 +34,7 @@ def vision_ai_classify_image(base64_image):
                 "content": [
                     {
                         "type": "text",
-                        "text": """
-                You are an expert flooding detector.
-
-                You are given a image. You must detect if there is flooding in the image.
-
-                the output MUST be a json object with a boolean value for the key "flooding_detected".
-
-                If you don't know what to anwser, you can set the key "flooding_detect" as false.
-
-                Example:
-                {
-                    "flooding_detected": true
-                }
-                """,
+                        "text": prompt,
                     },
                     {
                         "type": "image_url",
@@ -75,9 +62,9 @@ def get_ai_label(response):
         return json_object["flooding_detected"]
 
 
-def run_model(img):
+def run_model(img, prompt):
     base64_image = encode_image_to_base64(img)
 
-    response = vision_ai_classify_image(base64_image)
+    response = vision_ai_classify_image(base64_image, prompt)
 
     return get_ai_label(response)
