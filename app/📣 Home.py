@@ -1,41 +1,9 @@
-import base64
-from datetime import datetime
-import io
-
 import folium
 import pandas as pd
 
-from PIL import Image
 import requests
 import streamlit as st
 from streamlit_folium import st_folium
-
-
-# def generate_image(image_b64: str) -> Image:
-#     """Generate image from base64 string"""
-#     image_bytes = base64.b64decode(image_b64)
-#     image = Image.open(io.BytesIO(image_bytes))
-#     return image
-
-
-# # if "error" not in st.session_state:
-# #     st.session_state["error"] = False
-
-# # try:
-# #     raw_api_data = requests.get(
-# #         "https://api.dados.rio/v2/clima_alagamento/alagamento_detectado_ia/"
-# #     ).json()
-# #     last_update = requests.get(
-# #         "https://api.dados.rio/v2/clima_alagamento/ultima_atualizacao_alagamento_detectado_ia/"
-# #     ).text.strip('"')
-# #     st.session_state["error"] = False
-# # except Exception as exc:
-# #     raw_api_data = []
-# #     last_update = ""
-# #     st.session_state["error"] = True
-
-
-# # chart_data = pd.DataFrame(raw_api_data)
 
 
 def create_map(chart_data):

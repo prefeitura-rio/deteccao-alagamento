@@ -5,7 +5,8 @@ from model import run_model
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
-st.set_page_config(layout="wide", page_title="Experimente o Modelo")
+st.set_page_config(layout="wide", page_title="Experimente o Modelo | Vision AI")
+st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Identifique um alagamento por uma imagem")
 
