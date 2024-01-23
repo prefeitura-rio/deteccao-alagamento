@@ -6,6 +6,10 @@ import streamlit as st
 from streamlit_folium import st_folium
 
 
+st.set_page_config(layout="wide", page_title="Pontos Críticos em Tempo Real")
+st.image("./data/logo/logo.png", width=300)
+
+
 def create_map(chart_data):
     chart_data = chart_data.fillna("")
     # center map on the mean of the coordinates
@@ -137,8 +141,6 @@ def get_apis_last_updates():
 
 # #### FRONTEND ####
 
-st.set_page_config(layout="wide", page_title="Pontos Críticos em Tempo Real")
-st.image("./data/logo/logo.png", width=300)
 
 st.sidebar.dataframe(get_apis_last_updates())
 
