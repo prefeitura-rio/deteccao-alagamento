@@ -40,12 +40,12 @@ def create_map(chart_data):
     return m
 
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_pontos_criticos():
     return pd.read_csv("data/database/pontos_criticos.csv")
 
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_precipitacao():
     precipitacao_15min = pd.read_json(
         "https://api.dados.rio/v2/clima_pluviometro/precipitacao_15min/"

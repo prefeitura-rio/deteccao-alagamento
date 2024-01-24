@@ -8,7 +8,7 @@ st.image("./data/logo/logo.png", width=300)
 st.markdown("# Pontos de Alagamento | Vision AI")
 
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_alagamento_detectado_ia():
     raw_api_data = requests.get(
         "https://api.dados.rio/v2/clima_alagamento/alagamento_detectado_ia/"
