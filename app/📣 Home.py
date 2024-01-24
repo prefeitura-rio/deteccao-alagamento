@@ -125,14 +125,19 @@ def get_agrid_table(data_with_image):
     gb.configure_column("emoji", header_name="", editable=False, pinned="left")
     gb.configure_column("object", header_name="Objeto", editable=False)
     gb.configure_column("image_url", header_name="URL Imagem")
+    gb.configure_grid_options(enableCellTextSelection=True)
+    # Build grid options
+    grid_options = gb.build()
 
-    # # Set auto size mode
+    # Set auto size mode (if you still want to use it, otherwise remove this line)
     grid_response = AgGrid(
         data_with_image,
-        gridOptions=gb.build(),
+        gridOptions=grid_options,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+        # update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED,
+        # fit_columns_on_grid_load=True
         # height=400,
-        # width=1200,
+        # width="50%",
     )
 
     selected_row = grid_response["selected_rows"]
@@ -170,7 +175,7 @@ if selected_row:
             camera_data.iloc[0]["longitude"],
         ]
         folium_map = create_map(chart_data, location=camera_location)
-        map_data = st_folium(folium_map, key="map", height=600, width=1200)
+        map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
 else:
     map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
 
