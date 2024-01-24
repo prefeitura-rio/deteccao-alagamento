@@ -1,4 +1,4 @@
-import datetime
+from io import StringIO
 from typing import Union
 import folium
 import pandas as pd
@@ -6,8 +6,7 @@ import pandas as pd
 import requests
 import streamlit as st
 from streamlit_folium import st_folium
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, ColumnsAutoSizeMode
-from st_aggrid.shared import JsCode
+from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
 
 
 st.set_page_config(layout="wide")
@@ -88,6 +87,23 @@ def load_alagamento_detectado_ia():
 
     dataframe = dataframe.sort_values(by="label", ascending=True).reset_index(drop=True)
 
+    ## get more camera information
+    url = "https://docs.google.com/spreadsheets/d/122uOaPr8YdW5PTzrxSPF-FD0tgco596HqgB7WK7cHFw/edit#gid=914166579"
+    request_url = url.replace("edit#gid=", "export?format=csv&gid=")
+    response = requests.get(request_url)
+    cameras = pd.read_csv(StringIO(response.content.decode("utf-8")), dtype=str)
+    camera_cols = [
+        "id_camera",
+        "bairro",
+        "subprefeitura",
+        "id_bolsao",
+        "bacia",
+        "sub_bacia",
+    ]
+
+    cameras = cameras[camera_cols]
+    dataframe = pd.merge(dataframe, cameras, how="left", on="id_camera")
+
     return dataframe, last_update
 
 
@@ -95,7 +111,7 @@ def get_table_cameras_with_images(dataframe):
     # filter only flooded cameras
     table_data = (
         dataframe[dataframe["label"].notnull()]
-        .sort_values(by="label", ascending=False)
+        .sort_values(by=["label", "id_camera"], ascending=False)
         .reset_index(drop=True)
     )
     table_data["emoji"] = table_data["label"].apply(label_emoji)
@@ -104,6 +120,11 @@ def get_table_cameras_with_images(dataframe):
         "emoji",
         "id_camera",
         "object",
+        "bairro",
+        "subprefeitura",
+        "id_bolsao",
+        "bacia",
+        "sub_bacia",
         "image_url",
     ]
     table_data = table_data[col_order]
@@ -123,8 +144,16 @@ def get_agrid_table(data_with_image):
         "id_camera", header_name="ID Camera", editable=False, pinned="left"
     )
     gb.configure_column("emoji", header_name="", editable=False, pinned="left")
-    gb.configure_column("object", header_name="Objeto", editable=False)
+    gb.configure_column("object", header_name="Identificador", editable=False)
     gb.configure_column("image_url", header_name="URL Imagem")
+    gb.configure_column("bairro", header_name="Bairro")
+    gb.configure_column("subprefeitura", header_name="Subprefeitura")
+    gb.configure_column("id_bolsao", header_name="ID Bolsão")
+    gb.configure_column("bacia", header_name="Bacia")
+    gb.configure_column("sub_bacia", header_name="Sub Bacia")
+
+    gb.configure_column("image_url", header_name="URL Imagem")
+
     gb.configure_grid_options(enableCellTextSelection=True)
     # Build grid options
     grid_options = gb.build()
@@ -159,7 +188,7 @@ st.markdown(
     - Sucessos: {len(data_with_image)}
     - Falhas:{len(chart_data) - len(data_with_image)}
     
-    Selecione uma Camera para visualizar no mapa.
+    Selecione uma Camera para visualizar no mapa e exibir o snapshot.
 """,
 )
 
@@ -168,7 +197,6 @@ selected_row = get_agrid_table(data_with_image)
 if selected_row:
     selected_camera_id = selected_row[0]["id_camera"]
     camera_data = chart_data[chart_data["id_camera"] == selected_camera_id]
-
     if not camera_data.empty:
         camera_location = [
             camera_data.iloc[0]["latitude"],
@@ -176,40 +204,13 @@ if selected_row:
         ]
         folium_map = create_map(chart_data, location=camera_location)
         map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+
+        image_url = camera_data.iloc[0]["image_url"]
+        if image_url is None:
+            st.markdown("Falha ao capturar o snapshot da camera.")
+        else:
+            st.image(image_url)
+
+
 else:
     map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
-
-
-# select chart_data obj based on last_object_clicked coordinates
-obj_coord = map_data["last_object_clicked"]
-
-
-if obj_coord is None:
-    st.write("Clique no marcador para ver mais detalhes.")
-else:
-    selected_data = chart_data[
-        (chart_data["latitude"] == obj_coord["lat"])
-        & (chart_data["longitude"] == obj_coord["lng"])
-    ]
-
-    image_url = selected_data["image_url"].values[0]
-    selected_data = (
-        selected_data[["id_camera", "url_camera"]]
-        .rename(
-            columns={
-                "id_camera": "ID",
-                "url_camera": "🎥 Feed",
-            }
-        )
-        .T
-    )
-
-    selected_data.columns = ["Informações"]
-
-    st.markdown("### 📷 Camera snapshot")
-    if image_url is None:
-        st.markdown("Falha ao capturar o snapshot da camera.")
-    else:
-        st.image(image_url)
-
-    selected_data
