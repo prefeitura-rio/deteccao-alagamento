@@ -6,6 +6,8 @@ import pandas as pd
 import requests
 import streamlit as st
 from streamlit_folium import st_folium
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, ColumnsAutoSizeMode
+from st_aggrid.shared import JsCode
 
 
 st.set_page_config(layout="wide")
@@ -21,10 +23,13 @@ def get_icon_color(label: Union[bool, None]):
         return "gray"
 
 
-def create_map(chart_data):
+def create_map(chart_data, location=None):
     chart_data = chart_data.fillna("")
     # center map on the mean of the coordinates
-    if len(chart_data) > 0:
+
+    if location is not None:
+        m = folium.Map(location=location, zoom_start=18)
+    elif len(chart_data) > 0:
         m = folium.Map(
             location=[chart_data["latitude"].mean(), chart_data["longitude"].mean()],
             zoom_start=11,
@@ -106,12 +111,38 @@ def get_table_cameras_with_images(dataframe):
     return table_data
 
 
+def get_agrid_table(data_with_image):
+    # Configure AgGrid
+    gb = GridOptionsBuilder.from_dataframe(data_with_image)
+    gb.configure_selection("single", use_checkbox=False)
+    gb.configure_side_bar()  # if you need a side bar
+    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
+
+    # configure individual columns
+    gb.configure_column(
+        "id_camera", header_name="ID Camera", editable=False, pinned="left"
+    )
+    gb.configure_column("emoji", header_name="", editable=False, pinned="left")
+    gb.configure_column("object", header_name="Objeto", editable=False)
+    gb.configure_column("image_url", header_name="URL Imagem")
+
+    # # Set auto size mode
+    grid_response = AgGrid(
+        data_with_image,
+        gridOptions=gb.build(),
+        columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+        # height=400,
+        # width=1200,
+    )
+
+    selected_row = grid_response["selected_rows"]
+    return selected_row
+
+
 chart_data, last_update = load_alagamento_detectado_ia()
 data_with_image = get_table_cameras_with_images(chart_data)
-
 folium_map = create_map(chart_data)
 
-## front
 
 st.markdown("# Mapa de Alagamentos | Vision AI")
 st.markdown(
@@ -122,40 +153,27 @@ st.markdown(
     - Total: {len(chart_data)}
     - Sucessos: {len(data_with_image)}
     - Falhas:{len(chart_data) - len(data_with_image)}
+    
+    Selecione uma Camera para visualizar no mapa.
 """,
 )
 
-st.dataframe(
-    data_with_image,
-    column_config={
-        "emoji": st.column_config.Column(
-            "",
-        ),
-        "id_camera": st.column_config.Column(
-            "ID Camera",
-            help="ID Camera",
-            # width="medium",
-            required=True,
-        ),
-        "object": st.column_config.Column(
-            "Objeto",
-            help="Objeto",
-            # width="medium",
-            required=True,
-        ),
-        "image_url": st.column_config.LinkColumn(
-            "URL Imagem",
-            help="ID Camera",
-            # width="medium",
-            required=True,
-        ),
-    },
-    # hide_index=True,
-    use_container_width=True,
-)
+selected_row = get_agrid_table(data_with_image)
 
+if selected_row:
+    selected_camera_id = selected_row[0]["id_camera"]
+    camera_data = chart_data[chart_data["id_camera"] == selected_camera_id]
 
-map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+    if not camera_data.empty:
+        camera_location = [
+            camera_data.iloc[0]["latitude"],
+            camera_data.iloc[0]["longitude"],
+        ]
+        folium_map = create_map(chart_data, location=camera_location)
+        map_data = st_folium(folium_map, key="map", height=600, width=1200)
+else:
+    map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+
 
 # select chart_data obj based on last_object_clicked coordinates
 obj_coord = map_data["last_object_clicked"]
