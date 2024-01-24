@@ -178,19 +178,35 @@ folium_map = create_map(chart_data)
 
 st.markdown("# Mapa de Alagamentos | Vision AI")
 st.markdown(
-    f"""
-    **Ultima atualização**: {str(last_update)}
+    """
+    Esta aplicação usa as câmeras instaladas na cidade para detectar alagamentos e bolsões de água em tempo real. 
     
-    Status snapshots:
+    Ela usa o modelo Gemini Pro Vision para identificar alagamentos em imagens.
+    """
+)
+
+
+st.markdown(
+    f"""
+    
+    ----
+    
+    ### Status snapshots:
+    - **Ultima atualização**: {str(last_update)}
     - Total: {len(chart_data)}
     - Sucessos: {len(data_with_image)}
     - Falhas:{len(chart_data) - len(data_with_image)}
     
-    Selecione uma Camera para visualizar no mapa e exibir o snapshot.
+    ----
+    
+    ### Tabela de Status de Alagamentos
 """,
 )
 
 selected_row = get_agrid_table(data_with_image)
+st.markdown("----")
+st.markdown("###  Mapa de Câmeras")
+st.markdown("Selecione uma Câmera na tabela visualizar no mapa.")
 
 if selected_row:
     selected_camera_id = selected_row[0]["id_camera"]
@@ -204,11 +220,53 @@ if selected_row:
         map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
 
         image_url = camera_data.iloc[0]["image_url"]
+        st.markdown("----")
+        st.markdown("### 📷 Câmera snapshot")
+        st.markdown("Selecione uma Câmera na tabela visualizar o snapshot.")
+
         if image_url is None:
-            st.markdown("Falha ao capturar o snapshot da camera.")
+            st.markdown("Falha ao capturar o snapshot da câmera.")
         else:
             st.image(image_url)
 
 
 else:
     map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+
+    st.markdown("----")
+    st.markdown("### 📷 Câmera snapshot")
+    st.markdown("Selecione uma Câmera na tabela visualizar o snapshot.")
+
+# select chart_data obj based on last_object_clicked coordinates
+obj_coord = map_data["last_object_clicked"]
+
+
+# if obj_coord is None:
+#     st.write("Clique no marcador para ver mais detalhes.")
+# else:
+#     selected_data = chart_data[
+#         (chart_data["latitude"] == obj_coord["lat"])
+#         & (chart_data["longitude"] == obj_coord["lng"])
+#     ]
+
+#     image_url = selected_data["image_url"].values[0]
+#     selected_data = (
+#         selected_data[["id_camera", "url_camera"]]
+#         .rename(
+#             columns={
+#                 "id_camera": "ID",
+#                 "url_camera": "🎥 Feed",
+#             }
+#         )
+#         .T
+#     )
+
+#     selected_data.columns = ["Informações"]
+
+#     st.markdown("### 📷 Camera snapshot")
+#     if image_url is None:
+#         st.markdown("Falha ao capturar o snapshot da câmera.")
+#     else:
+#         st.image(image_url)
+
+#     selected_data
