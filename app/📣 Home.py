@@ -140,11 +140,9 @@ def get_agrid_table(data_with_image):
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
 
     # configure individual columns
-    gb.configure_column(
-        "id_camera", header_name="ID Camera", editable=False, pinned="left"
-    )
-    gb.configure_column("emoji", header_name="", editable=False, pinned="left")
-    gb.configure_column("object", header_name="Identificador", editable=False)
+    gb.configure_column("id_camera", header_name="ID Camera", pinned="left")
+    gb.configure_column("emoji", header_name="", pinned="left")
+    gb.configure_column("object", header_name="Identificador")
     gb.configure_column("image_url", header_name="URL Imagem")
     gb.configure_column("bairro", header_name="Bairro")
     gb.configure_column("subprefeitura", header_name="Subprefeitura")
