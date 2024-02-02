@@ -4,12 +4,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class APIVisionAI:
-    def __init__(self, username, password, client_id, client_secret):
+    def __init__(self, username, password):
         self.BASE_URL = "https://vision-ai-api-staging-ahcsotxvgq-uc.a.run.app"
         self.username = username
         self.password = password
-        self.client_id = client_id
-        self.client_secret = client_secret
         self.headers, self.token_renewal_time = self._get_headers()
 
     def _get_headers(self):
