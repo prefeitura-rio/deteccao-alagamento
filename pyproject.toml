@@ -19,3 +19,5 @@ streamlit-aggrid = "^0.3.4.post3"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+

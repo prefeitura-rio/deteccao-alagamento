@@ -2,11 +2,22 @@ from io import StringIO
 from typing import Union
 import folium
 import pandas as pd
+import os
+
 
 import requests
 import streamlit as st
 from streamlit_folium import st_folium
 from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
+
+from api import APIVisionAI
+
+vision_api = APIVisionAI(
+    username=os.environ.get("VISION_API_USERNAME"),
+    password=os.environ.get("VISION_API_PASSWORD"),
+    client_id=os.environ.get("VISION_API_CLIENT_ID"),
+    client_secret=os.environ.get("VISION_API_CLIENT_SECRET"),
+)
 
 
 st.set_page_config(layout="wide")
@@ -185,6 +196,19 @@ st.markdown(
     """
 )
 
+
+@st.cache_data(ttl=60, persist=True)
+def get_cameras():
+    return vision_api._get_all_pages("/cameras")
+
+
+st.json(get_cameras()[0])
+cameras = pd.DataFrame(get_cameras())
+# get identifications with not empty list
+cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
+
+st.text(cameras.columns)
+st.dataframe(cameras.head())
 
 st.markdown(
     f"""
