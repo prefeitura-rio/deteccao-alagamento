@@ -1,9 +1,9 @@
+# -*- coding: utf-8 -*-
 import folium
 import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
-
-from utils.utils import get_cameras, get_agrid_table, treat_data
+from utils.utils import get_agrid_table, get_cameras, treat_data
 
 st.set_page_config(layout="wide")
 # st.image("./data/logo/logo.png", width=300)

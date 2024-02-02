@@ -1,12 +1,12 @@
+# -*- coding: utf-8 -*-
+import json
+import os
 from typing import Union
+
 import folium
 import pandas as pd
-import os
-import json
-
 import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
-
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
 from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
