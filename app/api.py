@@ -14,12 +14,12 @@ class APIVisionAI:
 
     def _get_headers(self):
         access_token_response = requests.post(
-            "https://vision-ai-api-staging-ahcsotxvgq-uc.a.run.app/auth/token",
+            f"{self.BASE_URL}/auth/token",
             data={
                 "username": self.username,
                 "password": self.password,
             },
-            timeout=10,  # Add a timeout argument to avoid hanging indefinitely
+            timeout=20,  # Add a timeout argument to avoid hanging indefinitely
         ).json()
         token = access_token_response["access_token"]
         return {"Authorization": f"Bearer {token}"}, time.time()

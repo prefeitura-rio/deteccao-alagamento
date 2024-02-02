@@ -21,7 +21,7 @@ vision_api = APIVisionAI(
 
 
 st.set_page_config(layout="wide")
-st.image("./data/logo/logo.png", width=300)
+# st.image("./data/logo/logo.png", width=300)
 
 
 def get_icon_color(label: Union[bool, None]):
@@ -72,50 +72,33 @@ def label_emoji(label):
         return "⚫"
 
 
-@st.cache_data(ttl=60)
-def load_alagamento_detectado_ia():
-    raw_api_data = requests.get(
-        "https://api.dados.rio/v2/clima_alagamento/alagamento_detectado_ia/"
-    ).json()
-    last_update = pd.to_datetime(
-        requests.get(
-            "https://api.dados.rio/v2/clima_alagamento/ultima_atualizacao_alagamento_detectado_ia/"
-        ).text.strip('"')
-    )
+@st.cache_data(ttl=600, persist=True)
+def get_cameras():
+    return vision_api._get_all_pages("/cameras")
 
-    dataframe = pd.json_normalize(
-        raw_api_data,
-        record_path="ai_classification",
-        meta=[
-            "datetime",
-            "id_camera",
-            "url_camera",
+
+def treat_data(response):
+    # To dataframe
+    cameras = pd.DataFrame(response).set_index("id")
+
+    cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
+
+    cameras_attr = cameras[
+        [
+            "name",
+            "rtsp_url",
+            "update_interval",
             "latitude",
             "longitude",
-            "image_url",
-        ],
-    )
-
-    dataframe = dataframe.sort_values(by="label", ascending=True).reset_index(drop=True)
-
-    ## get more camera information
-    url = "https://docs.google.com/spreadsheets/d/122uOaPr8YdW5PTzrxSPF-FD0tgco596HqgB7WK7cHFw/edit#gid=914166579"
-    request_url = url.replace("edit#gid=", "export?format=csv&gid=")
-    response = requests.get(request_url)
-    cameras = pd.read_csv(StringIO(response.content.decode("utf-8")), dtype=str)
-    camera_cols = [
-        "id_camera",
-        "bairro",
-        "subprefeitura",
-        "id_bolsao",
-        "bacia",
-        "sub_bacia",
+            "snapshot_url",
+            "snapshot_timestamp",
+        ]
     ]
-
-    cameras = cameras[camera_cols]
-    dataframe = pd.merge(dataframe, cameras, how="left", on="id_camera")
-
-    return dataframe, last_update
+    exploded_df = cameras.explode("identifications")
+    cameras_identifications = pd.DataFrame(
+        exploded_df["identifications"].tolist(), index=exploded_df.index
+    )
+    return cameras_attr, cameras_identifications
 
 
 def get_table_cameras_with_images(dataframe):
@@ -151,17 +134,17 @@ def get_agrid_table(data_with_image):
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
 
     # configure individual columns
-    gb.configure_column("id_camera", header_name="ID Camera", pinned="left")
-    gb.configure_column("emoji", header_name="", pinned="left")
+    gb.configure_column("id", header_name="ID Camera", pinned="left")
+    # gb.configure_column("emoji", header_name="", pinned="left")
     gb.configure_column("object", header_name="Identificador")
-    gb.configure_column("image_url", header_name="URL Imagem")
-    gb.configure_column("bairro", header_name="Bairro")
-    gb.configure_column("subprefeitura", header_name="Subprefeitura")
-    gb.configure_column("id_bolsao", header_name="ID Bolsão")
-    gb.configure_column("bacia", header_name="Bacia")
-    gb.configure_column("sub_bacia", header_name="Sub Bacia")
-
-    gb.configure_column("image_url", header_name="URL Imagem")
+    gb.configure_column("label", header_name="Label")
+    gb.configure_column("label_explanation", header_name="Descrição")
+    # gb.configure_column("image_url", header_name="URL Imagem")
+    # gb.configure_column("bairro", header_name="Bairro")
+    # gb.configure_column("subprefeitura", header_name="Subprefeitura")
+    # gb.configure_column("id_bolsao", header_name="ID Bolsão")
+    # gb.configure_column("bacia", header_name="Bacia")
+    # gb.configure_column("sub_bacia", header_name="Sub Bacia")
 
     gb.configure_grid_options(enableCellTextSelection=True)
     # Build grid options
@@ -182,90 +165,147 @@ def get_agrid_table(data_with_image):
     return selected_row
 
 
-chart_data, last_update = load_alagamento_detectado_ia()
-data_with_image = get_table_cameras_with_images(chart_data)
-folium_map = create_map(chart_data)
+# chart_data, last_update = load_alagamento_detectado_ia()
+# data_with_image = get_table_cameras_with_images(chart_data)
+# folium_map = create_map(chart_data)
 
 
 st.markdown("# Mapa de Alagamentos | Vision AI")
-st.markdown(
-    """
-    Esta aplicação usa as câmeras instaladas na cidade para detectar alagamentos e bolsões de água em tempo real. 
-    
-    Ela usa o modelo Gemini Pro Vision para identificar alagamentos em imagens.
-    """
-)
 
 
-# @st.cache_data(ttl=60, persist=True)
-def get_cameras():
-    response = vision_api._get_all_pages("/cameras")
-    return response
+# get cameras
+cameras_attr, cameras_identifications = treat_data(get_cameras())
 
-    #
+col1, col2 = st.columns(2)
+with col1:
+    objects = cameras_identifications["object"].unique().tolist()
+    objects.sort()
+    # dropdown to filter by object
+    object_filter = st.selectbox(
+        "Filtrar por objeto",
+        objects,
+        index=objects.index("alert_category"),
+    )
 
 
-st.text(get_cameras())
-cameras = pd.DataFrame(get_cameras())
-# get identifications with not empty list
-# cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
-
-# st.text(cameras.columns)
-# st.dataframe(cameras.head())
-
-st.markdown(
-    f"""
-    
-    ----
-    
-    ### Status snapshots:
-    - **Ultima atualização**: {str(last_update)}
-    - Total: {len(chart_data)}
-    - Sucessos: {len(data_with_image)}
-    - Falhas:{len(chart_data) - len(data_with_image)}
-    
-    ----
-    
-    ### Tabela de Status de Alagamentos
-""",
-)
-
-selected_row = get_agrid_table(data_with_image)
-st.markdown("----")
-st.markdown("###  Mapa de Câmeras")
-st.markdown("Selecione uma Câmera na tabela visualizar no mapa.")
-
-if selected_row:
-    selected_camera_id = selected_row[0]["id_camera"]
-    camera_data = chart_data[chart_data["id_camera"] == selected_camera_id]
-    if not camera_data.empty:
-        camera_location = [
-            camera_data.iloc[0]["latitude"],
-            camera_data.iloc[0]["longitude"],
+with col2:
+    # dropdown to select label given selected object
+    label_filter = st.multiselect(
+        "Filtrar por label",
+        cameras_identifications[cameras_identifications["object"] == object_filter][
+            "label"
         ]
-        folium_map = create_map(chart_data, location=camera_location)
-        map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+        .dropna()
+        .unique(),
+        # if object_filter return minor and major, else return all labels
+        default=[
+            "minor",
+            "major",
+        ]
+        if object_filter == "alert_category"
+        else cameras_identifications[
+            cameras_identifications["object"] == object_filter
+        ]["label"]
+        .dropna()
+        .unique()
+        .tolist(),
+    )
 
-        image_url = camera_data.iloc[0]["image_url"]
-        st.markdown("----")
-        st.markdown("### 📷 Câmera snapshot")
-        st.markdown("Selecione uma Câmera na tabela visualizar o snapshot.")
+# filter both dfs by object and label
+cameras_attr = cameras_attr[
+    cameras_attr.index.isin(
+        cameras_identifications[
+            cameras_identifications["object"] == object_filter
+        ].index
+    )
+]
 
+cameras_identifications = cameras_identifications[
+    (cameras_identifications["object"] == object_filter)
+    & (cameras_identifications["label"].isin(label_filter))
+]
+
+
+# show cameras dfs
+merged_df = pd.merge(cameras_attr, cameras_identifications, on="id")
+merged_df = merged_df[
+    ["timestamp", "object", "label", "label_explanation"]
+].sort_values(by="label")
+
+# timestamp to datetime BRL+3 with no tz
+merged_df["timestamp"] = pd.to_datetime(merged_df["timestamp"]).dt.tz_convert(
+    "America/Sao_Paulo"
+)
+# make two cols
+col1, col2 = st.columns(2)
+
+with col1:
+    selected_row = get_agrid_table(merged_df.reset_index())
+
+with col2:
+    if selected_row:
+        st.markdown("### 📷 Camera snapshot")
+        # get cameras_attr url from selected row by id
+        image_url = cameras_attr.loc[selected_row[0]["id"]]["snapshot_url"]
         if image_url is None:
             st.markdown("Falha ao capturar o snapshot da câmera.")
         else:
             st.image(image_url)
 
 
-else:
-    map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+# st.markdown(
+#     f"""
 
-    st.markdown("----")
-    st.markdown("### 📷 Câmera snapshot")
-    st.markdown("Selecione uma Câmera na tabela visualizar o snapshot.")
+#     ----
 
-# select chart_data obj based on last_object_clicked coordinates
-obj_coord = map_data["last_object_clicked"]
+#     ### Status snapshots:
+#     - **Ultima atualização**: {str(last_update)}
+#     - Total: {len(chart_data)}
+#     - Sucessos: {len(data_with_image)}
+#     - Falhas:{len(chart_data) - len(data_with_image)}
+
+#     ----
+
+#     ### Tabela de Status de Alagamentos
+# """,
+# )
+
+# selected_row = get_agrid_table(data_with_image)
+# st.markdown("----")
+# st.markdown("###  Mapa de Câmeras")
+# st.markdown("Selecione uma Câmera na tabela visualizar no mapa.")
+
+# if selected_row:
+#     selected_camera_id = selected_row[0]["id_camera"]
+#     camera_data = chart_data[chart_data["id_camera"] == selected_camera_id]
+#     if not camera_data.empty:
+#         camera_location = [
+#             camera_data.iloc[0]["latitude"],
+#             camera_data.iloc[0]["longitude"],
+#         ]
+#         folium_map = create_map(chart_data, location=camera_location)
+#         map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+
+#         image_url = camera_data.iloc[0]["image_url"]
+#         st.markdown("----")
+#         st.markdown("### 📷 Câmera snapshot")
+#         st.markdown("Selecione uma Câmera na tabela visualizar o snapshot.")
+
+#         if image_url is None:
+#             st.markdown("Falha ao capturar o snapshot da câmera.")
+#         else:
+#             st.image(image_url)
+
+
+# else:
+#     map_data = st_folium(folium_map, key="fig1", height=600, width=1200)
+
+#     st.markdown("----")
+#     st.markdown("### 📷 Câmera snapshot")
+#     st.markdown("Selecione uma Câmera na tabela visualizar o snapshot.")
+
+# # select chart_data obj based on last_object_clicked coordinates
+# obj_coord = map_data["last_object_clicked"]
 
 
 # if obj_coord is None:
@@ -290,10 +330,4 @@ obj_coord = map_data["last_object_clicked"]
 
 #     selected_data.columns = ["Informações"]
 
-#     st.markdown("### 📷 Camera snapshot")
-#     if image_url is None:
-#         st.markdown("Falha ao capturar o snapshot da câmera.")
-#     else:
-#         st.image(image_url)
-
-#     selected_data
+# selected_data
