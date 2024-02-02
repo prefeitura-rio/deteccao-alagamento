@@ -14,14 +14,10 @@ class APIVisionAI:
 
     def _get_headers(self):
         access_token_response = requests.post(
-            "https://authentik.dados.rio/application/o/token/",
+            "https://vision-ai-api-staging-ahcsotxvgq-uc.a.run.app/auth/token",
             data={
-                "grant_type": "password",
                 "username": self.username,
                 "password": self.password,
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "scope": "profile",
             },
             timeout=10,  # Add a timeout argument to avoid hanging indefinitely
         ).json()

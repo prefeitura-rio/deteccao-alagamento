@@ -197,18 +197,21 @@ st.markdown(
 )
 
 
-@st.cache_data(ttl=60, persist=True)
+# @st.cache_data(ttl=60, persist=True)
 def get_cameras():
-    return vision_api._get_all_pages("/cameras")
+    response = vision_api._get_all_pages("/cameras")
+    return response
+
+    #
 
 
-st.json(get_cameras()[0])
+st.text(get_cameras())
 cameras = pd.DataFrame(get_cameras())
 # get identifications with not empty list
-cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
+# cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
 
-st.text(cameras.columns)
-st.dataframe(cameras.head())
+# st.text(cameras.columns)
+# st.dataframe(cameras.head())
 
 st.markdown(
     f"""
