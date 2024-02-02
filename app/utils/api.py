@@ -30,7 +30,7 @@ class APIVisionAI:
         self._refresh_token_if_needed()
         try:
             response = requests.get(
-                f"{self.BASE_URL}{path}", headers=self.headers, timeout=10
+                f"{self.BASE_URL}{path}", headers=self.headers, timeout=600
             )
             return response.json()
         except requests.exceptions.ReadTimeout as e:
