@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-# import folium
+# import folium # noqa
 import pandas as pd
 import streamlit as st
-
 # from streamlit_folium import st_folium
 from utils.utils import get_agrid_table, get_cameras, treat_data
 
