@@ -1,9 +1,10 @@
-import folium
+# -*- coding: utf-8 -*-
+# import folium
 import pandas as pd
 import streamlit as st
-from streamlit_folium import st_folium
 
-from utils.utils import get_cameras, get_agrid_table, treat_data
+# from streamlit_folium import st_folium
+from utils.utils import get_agrid_table, get_cameras, treat_data
 
 st.set_page_config(layout="wide")
 # st.image("./data/logo/logo.png", width=300)
@@ -12,7 +13,7 @@ st.set_page_config(layout="wide")
 st.markdown("# Mapa de Alagamentos | Vision AI")
 
 # get cameras
-cameras = get_cameras(use_mock_data=True)
+cameras = get_cameras(use_mock_data=True, update_mock_data=False)
 cameras_attr, cameras_identifications = treat_data(cameras)
 
 col1, col2 = st.columns(2)
@@ -29,7 +30,9 @@ with col1:
 
 with col2:
     labels = (
-        cameras_identifications[cameras_identifications["object"] == object_filter][
+        cameras_identifications[
+            cameras_identifications["object"] == object_filter
+        ][  # noqa
             "label"
         ]
         .dropna()

@@ -1,13 +1,12 @@
+# -*- coding: utf-8 -*-
+import json
+import os
 from typing import Union
+
 import folium
 import pandas as pd
-import os
-import json
-
-import streamlit as st
-from st_aggrid import AgGrid, GridOptionsBuilder, ColumnsAutoSizeMode
-
-from utils.api import APIVisionAI
+from api import APIVisionAI
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
 
 vision_api = APIVisionAI(
     username=os.environ.get("VISION_API_USERNAME"),
@@ -32,7 +31,10 @@ def create_map(chart_data, location=None):
         m = folium.Map(location=location, zoom_start=18)
     elif len(chart_data) > 0:
         m = folium.Map(
-            location=[chart_data["latitude"].mean(), chart_data["longitude"].mean()],
+            location=[
+                chart_data["latitude"].mean(),
+                chart_data["longitude"].mean(),
+            ],  # noqa
             zoom_start=11,
         )
     else:
@@ -48,7 +50,7 @@ def create_map(chart_data, location=None):
             icon=folium.features.DivIcon(
                 icon_size=(15, 15),
                 icon_anchor=(7, 7),
-                html=f'<div style="width: 20px; height: 20px; background-color: {icon_color}; border: 2px solid black; border-radius: 70%;"></div>',
+                html=f'<div style="width: 20px; height: 20px; background-color: {icon_color}; border: 2px solid black; border-radius: 70%;"></div>',  # noqa
             ),
         ).add_to(m)
     return m
@@ -64,13 +66,22 @@ def label_emoji(label):
 
 
 # @st.cache_data(ttl=600, persist=True)
-def get_cameras(use_mock_data=True):
+def get_cameras(use_mock_data=True, update_mock_data=False):
+
+    mock_data_path = "./data/temp/mock_api_data.json"
+
     if use_mock_data:
-        with open("./data/temp/mock_api_data.json") as f:
+        with open(mock_data_path) as f:
             data = json.load(f)
         return data
 
-    return vision_api._get_all_pages("/cameras")
+    data = vision_api._get_all_pages("/cameras")
+
+    if update_mock_data:
+        with open(mock_data_path) as f:
+            json.dump(data, f)
+
+    return data
 
 
 def treat_data(response):
@@ -124,10 +135,10 @@ def get_table_cameras_with_images(dataframe):
 
 def get_agrid_table(data_with_image):
     # Configure AgGrid
-    gb = GridOptionsBuilder.from_dataframe(data_with_image)
+    gb = GridOptionsBuilder.from_dataframe(data_with_image)  # noqa
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_side_bar()  # if you need a side bar
-    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
+    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
 
     # configure individual columns
     gb.configure_column("id", header_name="ID Camera", pinned="left")
@@ -146,12 +157,12 @@ def get_agrid_table(data_with_image):
     # Build grid options
     grid_options = gb.build()
 
-    # Set auto size mode (if you still want to use it, otherwise remove this line)
+    # Set auto size mode (if you still want to use it, otherwise remove this line) # noqa
     grid_response = AgGrid(
         data_with_image,
         gridOptions=grid_options,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
-        # update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED,
+        # update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED, # noqa
         # fit_columns_on_grid_load=True
         # height=400,
         # width="50%",
