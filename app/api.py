@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import time
-import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
 
 
 class APIVisionAI:
@@ -33,7 +35,7 @@ class APIVisionAI:
                 f"{self.BASE_URL}{path}", headers=self.headers, timeout=600
             )
             return response.json()
-        except requests.exceptions.ReadTimeout as e:
+        except requests.exceptions.ReadTimeout as _:  # noqa
             return {"items": []}
 
     def _get_all_pages(self, path):
@@ -42,7 +44,7 @@ class APIVisionAI:
         if not initial_response:
             return []
 
-        # Assuming the initial response contains the total number of items or pages
+        # Assuming the initial response contains the total number of items or pages # noqa
         total_pages = self._calculate_total_pages(initial_response)
 
         # Function to get a single page
@@ -58,7 +60,8 @@ class APIVisionAI:
         with ThreadPoolExecutor(max_workers=total_pages) as executor:
             # Create a future for each page
             futures = [
-                executor.submit(get_page, page) for page in range(1, total_pages + 1)
+                executor.submit(get_page, page)
+                for page in range(1, total_pages + 1)  # noqa
             ]
 
             for future in as_completed(futures):
