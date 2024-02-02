@@ -15,8 +15,6 @@ from api import APIVisionAI
 vision_api = APIVisionAI(
     username=os.environ.get("VISION_API_USERNAME"),
     password=os.environ.get("VISION_API_PASSWORD"),
-    client_id=os.environ.get("VISION_API_CLIENT_ID"),
-    client_secret=os.environ.get("VISION_API_CLIENT_SECRET"),
 )
 
 
@@ -198,17 +196,19 @@ with col2:
         .dropna()
         .unique(),
         # if object_filter return minor and major, else return all labels
-        default=[
-            "minor",
-            "major",
-        ]
-        if object_filter == "alert_category"
-        else cameras_identifications[
-            cameras_identifications["object"] == object_filter
-        ]["label"]
-        .dropna()
-        .unique()
-        .tolist(),
+        default=(
+            [
+                "minor",
+                "major",
+            ]
+            if object_filter == "alert_category"
+            else cameras_identifications[
+                cameras_identifications["object"] == object_filter
+            ]["label"]
+            .dropna()
+            .unique()
+            .tolist()
+        ),
     )
 
 # filter both dfs by object and label
