@@ -38,21 +38,21 @@ class APIVisionAI:
         except requests.exceptions.ReadTimeout as _:  # noqa
             return {"items": []}
 
-    def _get_all_pages(self, path):
+    def _get_all_pages(self, path, page_size=300):
         # Initial request to determine the number of pages
         initial_response = self._get(f"{path}?page=1&size=1")
         if not initial_response:
             return []
 
         # Assuming the initial response contains the total number of items or pages # noqa
-        total_pages = self._calculate_total_pages(initial_response)
+        total_pages = self._calculate_total_pages(initial_response, page_size)
 
         # Function to get a single page
         def get_page(page):
             # time each execution
             start = time.time()
             print(f"Getting page {page} of {total_pages}")
-            response = self._get(f"{path}?page={page}&size=100")
+            response = self._get(f"{path}?page={page}&size={page_size}")
             print(f"Page {page} took {time.time() - start} seconds")
             return response
 
@@ -71,6 +71,6 @@ class APIVisionAI:
 
         return data
 
-    def _calculate_total_pages(self, response):
+    def _calculate_total_pages(self, response, page_size):
         print(response)
-        return round(response["total"] / 100) + 1
+        return round(response["total"] / page_size) + 1

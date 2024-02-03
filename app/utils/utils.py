@@ -5,6 +5,7 @@ from typing import Union
 
 import folium
 import pandas as pd
+import streamlit as st
 from api import APIVisionAI
 from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
 
@@ -65,8 +66,8 @@ def label_emoji(label):
         return "⚫"
 
 
-# @st.cache_data(ttl=600, persist=True)
-def get_cameras(use_mock_data=True, update_mock_data=False):
+@st.cache_data(ttl=600, persist=True)
+def get_cameras(use_mock_data=False, update_mock_data=False):
 
     mock_data_path = "./data/temp/mock_api_data.json"
 
@@ -75,7 +76,7 @@ def get_cameras(use_mock_data=True, update_mock_data=False):
             data = json.load(f)
         return data
 
-    data = vision_api._get_all_pages("/cameras")
+    data = vision_api._get_all_pages(path="/cameras", page_size=300)
 
     if update_mock_data:
         with open(mock_data_path) as f:
@@ -145,7 +146,12 @@ def get_agrid_table(data_with_image):
     # gb.configure_column("emoji", header_name="", pinned="left")
     gb.configure_column("object", header_name="Identificador")
     gb.configure_column("label", header_name="Label")
-    gb.configure_column("label_explanation", header_name="Descrição")
+    gb.configure_column(
+        "label_explanation",
+        header_name="Descrição",
+        cellStyle={"white-space": "normal"},  # This enables text wrapping
+        autoHeight=True,  # Adjusts row height based on content
+    )
     # gb.configure_column("image_url", header_name="URL Imagem")
     # gb.configure_column("bairro", header_name="Bairro")
     # gb.configure_column("subprefeitura", header_name="Subprefeitura")
