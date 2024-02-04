@@ -6,7 +6,7 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
 from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
@@ -261,11 +261,12 @@ def get_agrid_table(table):
         table,
         gridOptions=grid_options,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
-        # update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED, # noqa
+        update_mode=GridUpdateMode.MODEL_CHANGED
+        | GridUpdateMode.COLUMN_RESIZED,  # noqa
         # fit_columns_on_grid_load=True
         # custom_css=custom_css,
         # allow_unsafe_jscode=True,
-        # height=500,
+        # height="600px",
         # theme="streamlit_whitegrid",
         # width="100%",
     )
