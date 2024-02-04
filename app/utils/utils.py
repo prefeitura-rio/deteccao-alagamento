@@ -6,8 +6,8 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from utils.api import APIVisionAI
 from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
+from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
     username=os.environ.get("VISION_API_USERNAME"),
