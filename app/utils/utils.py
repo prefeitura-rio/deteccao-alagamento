@@ -15,7 +15,7 @@ vision_api = APIVisionAI(
 )
 
 
-@st.cache_data(ttl=60 * 10, persist=False)
+@st.cache_data(ttl=60 * 2, persist=False)
 def get_cameras(
     only_active=True,
     use_mock_data=False,
@@ -118,16 +118,9 @@ def get_filted_cameras_objects(
     cameras_identifications_merged = pd.merge(
         cameras_filter, cameras_identifications_filter, on="id"
     )
-    cameras_identifications_merged = cameras_identifications_merged[
-        [
-            "bairro",
-            "snapshot_timestamp",
-            "timestamp",
-            "object",
-            "label",
-            "label_explanation",
-        ]
-    ].sort_values(by=["timestamp", "label"], ascending=False)
+    cameras_identifications_merged = cameras_identifications_merged.sort_values(  # noqa
+        by=["timestamp", "label"], ascending=False
+    )
 
     return (
         cameras_identifications_merged,
@@ -157,9 +150,18 @@ def display_camera_details(row, cameras_identifications):
 
 
 def get_icon_color(label: Union[bool, None]):
-    if label is True:
+    if label in [
+        "major",
+        "totally_blocked",
+        "impossible",
+        "impossibe",
+        "poor",
+        "true",
+    ]:  # noqa
         return "red"
-    elif label is False:
+    elif label in ["minor", "partially_blocked", "difficult"]:
+        return "orange"
+    elif label in ["normal", "free", "easy", "moderate", "clean", "false"]:
         return "green"
     else:
         return "gray"
@@ -168,31 +170,30 @@ def get_icon_color(label: Union[bool, None]):
 def create_map(chart_data, location=None):
     chart_data = chart_data.fillna("")
     # center map on the mean of the coordinates
-
     if location is not None:
-        m = folium.Map(location=location, zoom_start=18)
+        m = folium.Map(location=location, zoom_start=16)
     elif len(chart_data) > 0:
         m = folium.Map(
             location=[
                 chart_data["latitude"].mean(),
                 chart_data["longitude"].mean(),
             ],  # noqa
-            zoom_start=11,
+            zoom_start=10.0,
         )
     else:
-        m = folium.Map(location=[-22.917690, -43.413861], zoom_start=11)
+        m = folium.Map(location=[-22.917690, -43.413861], zoom_start=10)
 
     for _, row in chart_data.iterrows():
         icon_color = get_icon_color(row["label"])
         folium.Marker(
             location=[row["latitude"], row["longitude"]],
             # Adicionar id_camera ao tooltip
-            tooltip=f"ID: {row['id_camera']}",
+            tooltip=f"ID: {row['id']}",
             # Alterar a cor do ícone de acordo com o status
             icon=folium.features.DivIcon(
                 icon_size=(15, 15),
                 icon_anchor=(7, 7),
-                html=f'<div style="width: 20px; height: 20px; background-color: {icon_color}; border: 2px solid black; border-radius: 70%;"></div>',  # noqa
+                html=f'<div style="width: 15px; height: 15px; background-color: {icon_color}; border: 2px solid black; border-radius: 70%;"></div>',  # noqa
             ),
         ).add_to(m)
     return m
@@ -237,7 +238,6 @@ def get_agrid_table(table):
     gb = GridOptionsBuilder.from_dataframe(table)  # noqa
 
     gb.configure_column("id", header_name="ID Camera", pinned="left")
-    # gb.configure_column("emoji", header_name="", pinned="left")
     gb.configure_column("object", header_name="Identificador")
     gb.configure_column("label", header_name="Label")
     gb.configure_column("timestamp", header_name="Data Identificação")
@@ -254,6 +254,7 @@ def get_agrid_table(table):
 
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_side_bar()
+    gb.configure_grid_options(enableCellTextSelection=True)
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
     grid_options = gb.build()
 
@@ -267,7 +268,6 @@ def get_agrid_table(table):
         # custom_css=custom_css,
         # allow_unsafe_jscode=True,
         # height="600px",
-        # theme="streamlit_whitegrid",
         # width="100%",
     )
 
