@@ -233,13 +233,9 @@ def get_table_cameras_with_images(dataframe):
 
 
 def get_agrid_table(table):
-    # Configure AgGrid
-    gb = GridOptionsBuilder.from_dataframe(table)  # noqa
-    gb.configure_selection("single", use_checkbox=False)
-    gb.configure_side_bar()  # if you need a side bar
-    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
 
-    # configure individual columns
+    gb = GridOptionsBuilder.from_dataframe(table)  # noqa
+
     gb.configure_column("id", header_name="ID Camera", pinned="left")
     # gb.configure_column("emoji", header_name="", pinned="left")
     gb.configure_column("object", header_name="Identificador")
@@ -248,33 +244,32 @@ def get_agrid_table(table):
     gb.configure_column(
         "label_explanation",
         header_name="Descrição",
-        cellStyle={"white-space": "normal"},  # This enables text wrapping
-        autoHeight=True,  # Adjusts row height based on content
+        cellStyle={"white-space": "normal"},
+        autoHeight=True,
     )
 
     gb.configure_column(
         "snapshot_timestamp", header_name="Data Snapshot", hide=False
     )  # noqa
-    # gb.configure_column("bairro", header_name="Bairro")
-    # gb.configure_column("subprefeitura", header_name="Subprefeitura")
-    # gb.configure_column("id_bolsao", header_name="ID Bolsão")
-    # gb.configure_column("bacia", header_name="Bacia")
-    # gb.configure_column("sub_bacia", header_name="Sub Bacia")
 
-    gb.configure_grid_options(enableCellTextSelection=True)
-    # Build grid options
+    gb.configure_selection("single", use_checkbox=False)
+    gb.configure_side_bar()
+    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
     grid_options = gb.build()
 
-    # Set auto size mode (if you still want to use it, otherwise remove this line) # noqa
     grid_response = AgGrid(
         table,
         gridOptions=grid_options,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         # update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED, # noqa
         # fit_columns_on_grid_load=True
-        # height=400,
-        # width="50%",
+        # custom_css=custom_css,
+        # allow_unsafe_jscode=True,
+        # height=500,
+        # theme="streamlit_whitegrid",
+        # width="100%",
     )
 
     selected_row = grid_response["selected_rows"]
+
     return selected_row
