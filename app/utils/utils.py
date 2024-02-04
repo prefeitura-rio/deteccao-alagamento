@@ -15,7 +15,7 @@ vision_api = APIVisionAI(
 )
 
 
-@st.cache_data(ttl=60 * 3, persist=False)
+@st.cache_data(ttl=60 * 10, persist=False)
 def get_cameras(
     only_active=True,
     use_mock_data=False,
@@ -97,6 +97,65 @@ def treat_data(response):
     return cameras_attr, cameras_identifications
 
 
+def get_filted_cameras_objects(
+    cameras_attr, cameras_identifications, object_filter, label_filter
+):
+    # filter both dfs by object and label
+    cameras_filter = cameras_attr[
+        cameras_attr.index.isin(
+            cameras_identifications[
+                cameras_identifications["object"] == object_filter
+            ].index
+        )
+    ]
+
+    cameras_identifications_filter = cameras_identifications[
+        (cameras_identifications["object"] == object_filter)
+        & (cameras_identifications["label"].isin(label_filter))
+    ]
+
+    # show cameras dfs
+    cameras_identifications_merged = pd.merge(
+        cameras_filter, cameras_identifications_filter, on="id"
+    )
+    cameras_identifications_merged = cameras_identifications_merged[
+        [
+            "bairro",
+            "snapshot_timestamp",
+            "timestamp",
+            "object",
+            "label",
+            "label_explanation",
+        ]
+    ].sort_values(by=["timestamp", "label"], ascending=False)
+
+    return (
+        cameras_identifications_merged,
+        cameras_filter,
+        cameras_identifications_filter,
+    )
+
+
+def display_camera_details(row, cameras_identifications):
+    camera_id = row.name
+    image_url = row["snapshot_url"]
+    camera_name = row["name"]
+    snapshot_timestamp = row["snapshot_timestamp"].strftime("%d/%m/%Y %H:%M")  # noqa
+
+    st.markdown(f"### 📷 Camera snapshot")  # noqa
+    st.markdown(f"Endereço: {camera_name}")
+    st.markdown(f"Data Snapshot: {snapshot_timestamp}")
+
+    # get cameras_attr url from selected row by id
+    if image_url is None:
+        st.markdown("Falha ao capturar o snapshot da câmera.")
+    else:
+        st.image(image_url)
+
+    camera_identifications = cameras_identifications.loc[camera_id]  # noqa
+    get_agrid_table(table=camera_identifications.reset_index())
+
+
 def get_icon_color(label: Union[bool, None]):
     if label is True:
         return "red"
@@ -173,9 +232,9 @@ def get_table_cameras_with_images(dataframe):
     return table_data
 
 
-def get_agrid_table(data_with_image):
+def get_agrid_table(table):
     # Configure AgGrid
-    gb = GridOptionsBuilder.from_dataframe(data_with_image)  # noqa
+    gb = GridOptionsBuilder.from_dataframe(table)  # noqa
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_side_bar()  # if you need a side bar
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
@@ -185,7 +244,7 @@ def get_agrid_table(data_with_image):
     # gb.configure_column("emoji", header_name="", pinned="left")
     gb.configure_column("object", header_name="Identificador")
     gb.configure_column("label", header_name="Label")
-    gb.configure_column("timestamp", header_name="Data detecção")
+    gb.configure_column("timestamp", header_name="Data Identificação")
     gb.configure_column(
         "label_explanation",
         header_name="Descrição",
@@ -208,7 +267,7 @@ def get_agrid_table(data_with_image):
 
     # Set auto size mode (if you still want to use it, otherwise remove this line) # noqa
     grid_response = AgGrid(
-        data_with_image,
+        table,
         gridOptions=grid_options,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         # update_mode=GridUpdateMode.MODEL_CHANGED | GridUpdateMode.COLUMN_RESIZED, # noqa

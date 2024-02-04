@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 # import folium # noqa
-import pandas as pd
+
 import streamlit as st
 from streamlit_folium import st_folium  # noqa
-from utils.utils import get_agrid_table, get_cameras, treat_data
+from utils.utils import (
+    display_camera_details,
+    get_agrid_table,
+    get_cameras,
+    get_filted_cameras_objects,
+    treat_data,
+)
 
 st.set_page_config(layout="wide")
 # st.image("./data/logo/logo.png", width=300)
@@ -56,68 +62,42 @@ with col2:
         default=labels_default,
     )
 
-# filter both dfs by object and label
-cameras_filter = cameras_attr[
-    cameras_attr.index.isin(
-        cameras_identifications[
-            cameras_identifications["object"] == object_filter
-        ].index
-    )
-]
 
-cameras_identifications_filter = cameras_identifications[
-    (cameras_identifications["object"] == object_filter)
-    & (cameras_identifications["label"].isin(label_filter))
-]
-
-
-# show cameras dfs
-merged_df = pd.merge(cameras_filter, cameras_identifications_filter, on="id")
-merged_df = merged_df[
-    [
-        "bairro",
-        "snapshot_timestamp",
-        "timestamp",
-        "object",
-        "label",
-        "label_explanation",
-    ]
-].sort_values(by=["timestamp", "label"], ascending=False)
-
-
-# timestamp to datetime BRL+3 with no tz
+(
+    cameras_identifications_merged,
+    cameras_filter,
+    cameras_identifications_filter,
+) = get_filted_cameras_objects(
+    cameras_attr, cameras_identifications, object_filter, label_filter
+)
 
 # make two cols
 col1, col2 = st.columns(2)
 
 with col1:
-    selected_row = get_agrid_table(merged_df.reset_index())
+    selected_row = get_agrid_table(cameras_identifications_merged.reset_index())  # noqa
 
 with col2:
     if selected_row:
-        row = cameras_filter.loc[selected_row[0]["id"]]
-        camera_name = row["name"]
-        snapshot_timestamp = row["snapshot_timestamp"].strftime(
-            "%d/%m/%Y %H:%M"
+        camera_id = selected_row[0]["id"]
+        row = cameras_filter.loc[camera_id]
+        display_camera_details(
+            row=row, cameras_identifications=cameras_identifications
         )  # noqa
+    else:
+        st.markdown(
+            """
+            ### 📷 Câmera snapshot
+            Selecione uma Câmera na tabela para visualizar mais detalhes.
+            """
+        )
 
-        st.markdown(f"### 📷 Camera snapshot")  # noqa
-        st.markdown(f"Endereço: {camera_name}")
-        st.markdown(f"Data Snapshot: {snapshot_timestamp}")
-
-        # get cameras_attr url from selected row by id
-        image_url = row["snapshot_url"]
-        if image_url is None:
-            st.markdown("Falha ao capturar o snapshot da câmera.")
-        else:
-            st.image(image_url)
-
-        camera_identifications = cameras_identifications.loc[
-            selected_row[0]["id"]
-        ]  # noqa
-
-        get_agrid_table(camera_identifications.reset_index())
-
+        # for camera_id in cameras_identifications_filter.index:
+        #     row = cameras_filter.loc[camera_id]
+        #     display_camera_details(
+        #         row=row, cameras_identifications=cameras_identifications
+        #     )
+        #     time.sleep(2)
 
 # st.markdown(
 #     f"""
