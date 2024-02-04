@@ -31,12 +31,12 @@ class APIVisionAI:
             response = requests.get(
                 f"{self.BASE_URL}{path}", headers=self.headers, timeout=timeout
             )
-            # response.raise_for_status()
+            response.raise_for_status()
             return response.json()
         except requests.exceptions.ReadTimeout as _:  # noqa
             return {"items": []}
 
-    def _get_all_pages(self, path, page_size=300, timeout=120):
+    def _get_all_pages(self, path, page_size=100, timeout=120):
         print(f"Getting all pages for {path}")
         # Initial request to determine the number of pages
         initial_response = self._get(

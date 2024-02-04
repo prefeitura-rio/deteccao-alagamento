@@ -6,7 +6,7 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from api import APIVisionAI
+from utils.api import APIVisionAI
 from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
 
 vision_api = APIVisionAI(
@@ -15,7 +15,7 @@ vision_api = APIVisionAI(
 )
 
 
-@st.cache_data(ttl=600, persist=False)
+# @st.cache_data(ttl=600, persist=False)
 def get_cameras(
     use_mock_data=False, update_mock_data=False, page_size=300, timeout=120
 ):
@@ -76,6 +76,9 @@ def treat_data(response):
     cameras_identifications = pd.DataFrame(
         exploded_df["identifications"].tolist(), index=exploded_df.index
     )
+
+    print(len(cameras_identifications))
+
     cameras_identifications["timestamp"] = pd.to_datetime(
         cameras_identifications["timestamp"]
     ).dt.tz_convert("America/Sao_Paulo")
