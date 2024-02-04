@@ -66,8 +66,10 @@ def label_emoji(label):
         return "⚫"
 
 
-@st.cache_data(ttl=600, persist=True)
-def get_cameras(use_mock_data=False, update_mock_data=False):
+@st.cache_data(ttl=600, persist=False)
+def get_cameras(
+    use_mock_data=False, update_mock_data=False, page_size=300, timeout=120
+):
 
     mock_data_path = "./data/temp/mock_api_data.json"
 
@@ -76,7 +78,9 @@ def get_cameras(use_mock_data=False, update_mock_data=False):
             data = json.load(f)
         return data
 
-    data = vision_api._get_all_pages(path="/cameras", page_size=300)
+    data = vision_api._get_all_pages(
+        path="/cameras", page_size=page_size, timeout=timeout
+    )
 
     if update_mock_data:
         with open(mock_data_path) as f:

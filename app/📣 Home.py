@@ -2,6 +2,7 @@
 # import folium # noqa
 import pandas as pd
 import streamlit as st
+
 # from streamlit_folium import st_folium
 from utils.utils import get_agrid_table, get_cameras, treat_data
 
@@ -12,7 +13,9 @@ st.set_page_config(layout="wide")
 st.markdown("# Mapa de Alagamentos | Vision AI")
 
 # get cameras
-cameras = get_cameras(use_mock_data=True, update_mock_data=False)
+cameras = get_cameras(
+    page_size=300, timeout=120, use_mock_data=False, update_mock_data=False
+)
 cameras_attr, cameras_identifications = treat_data(cameras)
 
 col1, col2 = st.columns(2)
