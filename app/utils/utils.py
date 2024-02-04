@@ -188,7 +188,7 @@ def create_map(chart_data, location=None):
         folium.Marker(
             location=[row["latitude"], row["longitude"]],
             # Adicionar id_camera ao tooltip
-            tooltip=f"ID: {row['id']}",
+            tooltip=f"ID: {row['id']}<br>Label: {row['label']}",
             # Alterar a cor do ícone de acordo com o status
             icon=folium.features.DivIcon(
                 icon_size=(15, 15),
