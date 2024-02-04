@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Tuple
@@ -27,50 +28,63 @@ class APIVisionAI:
 
     def _get(self, path: str, timeout: int = 120) -> Dict:
         self._refresh_token_if_needed()
-        try:
-            response = requests.get(
-                f"{self.BASE_URL}{path}", headers=self.headers, timeout=timeout
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.ReadTimeout as _:  # noqa
-            return {"items": []}
+        response = requests.get(
+            f"{self.BASE_URL}{path}", headers=self.headers, timeout=timeout
+        )
+        response.raise_for_status()
+        return response.json()
 
     def _get_all_pages(self, path, page_size=100, timeout=120):
-        print(f"Getting all pages for {path}")
-        # Initial request to determine the number of pages
-        initial_response = self._get(
-            path=f"{path}?page=1&size=1", timeout=timeout
-        )  # noqa
-        if not initial_response:
-            return []
-
-        # Assuming the initial response contains the total number of items or pages # noqa
-        total_pages = self._calculate_total_pages(initial_response, page_size)
 
         # Function to get a single page
-        def get_page(page):
+        def get_page(page, total_pages):
             # time each execution
+
             start = time.time()
-            print(f"Getting page {page} of {total_pages}")
-            response = self._get(
-                path=f"{path}?page={page}&size={page_size}", timeout=timeout
+            response = self._get(path=page, timeout=timeout)
+            print(
+                f"Page {page} out {total_pages} took {round(time.time() - start,2)} seconds"  # noqa
             )
-            print(f"Page {page} took {time.time() - start} seconds")
             return response
 
+        if isinstance(path, str):
+
+            print(f"Getting all pages for {path}")
+            # Initial request to determine the number of pages
+            initial_response = self._get(
+                path=f"{path}?page=1&size=1", timeout=timeout
+            )  # noqa
+            if not initial_response:
+                return []
+
+            # Assuming the initial response contains the total number of items or pages # noqa
+            total_pages = self._calculate_total_pages(
+                initial_response, page_size
+            )  # noqa
+            pages = [
+                f"{path}?page={page}&size={page_size}"
+                for page in range(1, total_pages + 1)  # noqa
+            ]
+
+        elif isinstance(path, list):
+            total_pages = len(path)
+            pages = path
+
         data = []
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        with ThreadPoolExecutor(max_workers=total_pages) as executor:
             # Create a future for each page
             futures = [
-                executor.submit(get_page, page)
-                for page in range(1, total_pages + 1)  # noqa
+                executor.submit(get_page, page, total_pages) for page in pages  # noqa
             ]
 
             for future in as_completed(futures):
                 response = future.result()
-                if response:
-                    data.extend(response["items"])
+                items = response.get("items", response)
+                if isinstance(items, list):
+                    data.extend(items)
+                elif isinstance(items, dict):
+                    data.append(items)
+
         print("Getting all pages done!!!")
         return data
 

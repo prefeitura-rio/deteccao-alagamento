@@ -6,8 +6,8 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from utils.api import APIVisionAI
 from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder
+from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
     username=os.environ.get("VISION_API_USERNAME"),
@@ -15,9 +15,13 @@ vision_api = APIVisionAI(
 )
 
 
-# @st.cache_data(ttl=600, persist=False)
+@st.cache_data(ttl=60 * 3, persist=False)
 def get_cameras(
-    use_mock_data=False, update_mock_data=False, page_size=300, timeout=120
+    only_active=True,
+    use_mock_data=False,
+    update_mock_data=False,
+    page_size=100,
+    timeout=120,
 ):
 
     mock_data_path = "./data/temp/mock_api_data.json"
@@ -26,10 +30,16 @@ def get_cameras(
         with open(mock_data_path) as f:
             data = json.load(f)
         return data
-
-    data = vision_api._get_all_pages(
-        path="/cameras", page_size=page_size, timeout=timeout
-    )
+    if only_active:
+        cameras_ativas = vision_api._get_all_pages(
+            "/agents/89173394-ee85-4613-8d2b-b0f860c26b0f/cameras"
+        )
+        cameras_ativas_ids = [f"/cameras/{d.get('id')}" for d in cameras_ativas]  # noqa
+        data = vision_api._get_all_pages(cameras_ativas_ids, timeout=timeout)
+    else:
+        data = vision_api._get_all_pages(
+            path="/cameras", page_size=page_size, timeout=timeout
+        )
 
     if update_mock_data:
         with open(mock_data_path, "w") as f:
@@ -76,8 +86,6 @@ def treat_data(response):
     cameras_identifications = pd.DataFrame(
         exploded_df["identifications"].tolist(), index=exploded_df.index
     )
-
-    print(len(cameras_identifications))
 
     cameras_identifications["timestamp"] = pd.to_datetime(
         cameras_identifications["timestamp"]

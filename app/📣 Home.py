@@ -13,7 +13,11 @@ st.markdown("# Mapa de Alagamentos | Vision AI")
 
 # get cameras
 cameras = get_cameras(
-    page_size=1000, timeout=600, use_mock_data=True, update_mock_data=False
+    only_active=True,
+    page_size=3000,
+    timeout=600,
+    use_mock_data=False,
+    update_mock_data=True,
 )
 cameras_attr, cameras_identifications = treat_data(cameras)
 
