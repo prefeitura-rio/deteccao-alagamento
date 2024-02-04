@@ -15,6 +15,77 @@ vision_api = APIVisionAI(
 )
 
 
+@st.cache_data(ttl=600, persist=False)
+def get_cameras(
+    use_mock_data=False, update_mock_data=False, page_size=300, timeout=120
+):
+
+    mock_data_path = "./data/temp/mock_api_data.json"
+
+    if use_mock_data:
+        with open(mock_data_path) as f:
+            data = json.load(f)
+        return data
+
+    data = vision_api._get_all_pages(
+        path="/cameras", page_size=page_size, timeout=timeout
+    )
+
+    if update_mock_data:
+        with open(mock_data_path, "w") as f:
+            json.dump(data, f)
+
+    return data
+
+
+def treat_data(response):
+    cameras_aux = pd.read_csv("./data/database/cameras_aux.csv", dtype=str)
+    cameras_aux = cameras_aux.rename(columns={"id_camera": "id"}).set_index(
+        "id"
+    )  # noqa
+    # To dataframe
+    cameras = pd.DataFrame(response).set_index("id")
+    cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
+    cameras["snapshot_timestamp"] = pd.to_datetime(
+        cameras["snapshot_timestamp"]
+    ).dt.tz_convert("America/Sao_Paulo")
+    cameras = cameras.sort_values(by=["snapshot_timestamp"])
+    cameras = cameras.merge(cameras_aux, on="id", how="left")
+    cameras_attr = cameras[
+        [
+            "bairro",
+            "subprefeitura",
+            "name",
+            # "rtsp_url",
+            # "update_interval",
+            "latitude",
+            "longitude",
+            "snapshot_url",
+            "snapshot_timestamp",
+            # "id_h3",
+            # "id_bolsao",
+            # "bolsao_latitude",
+            # "bolsao_longitude",
+            # "bolsao_classe_atual",
+            # "bacia",
+            # "sub_bacia",
+            # "geometry_bolsao_buffer_0.002",
+        ]
+    ]
+    exploded_df = cameras.explode("identifications")
+    cameras_identifications = pd.DataFrame(
+        exploded_df["identifications"].tolist(), index=exploded_df.index
+    )
+    cameras_identifications["timestamp"] = pd.to_datetime(
+        cameras_identifications["timestamp"]
+    ).dt.tz_convert("America/Sao_Paulo")
+    cameras_identifications = cameras_identifications.sort_values(
+        ["timestamp", "label"], ascending=False
+    )
+
+    return cameras_attr, cameras_identifications
+
+
 def get_icon_color(label: Union[bool, None]):
     if label is True:
         return "red"
@@ -66,53 +137,6 @@ def label_emoji(label):
         return "⚫"
 
 
-@st.cache_data(ttl=600, persist=False)
-def get_cameras(
-    use_mock_data=False, update_mock_data=False, page_size=300, timeout=120
-):
-
-    mock_data_path = "./data/temp/mock_api_data.json"
-
-    if use_mock_data:
-        with open(mock_data_path) as f:
-            data = json.load(f)
-        return data
-
-    data = vision_api._get_all_pages(
-        path="/cameras", page_size=page_size, timeout=timeout
-    )
-
-    if update_mock_data:
-        with open(mock_data_path) as f:
-            json.dump(data, f)
-
-    return data
-
-
-def treat_data(response):
-    # To dataframe
-    cameras = pd.DataFrame(response).set_index("id")
-
-    cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
-
-    cameras_attr = cameras[
-        [
-            "name",
-            "rtsp_url",
-            "update_interval",
-            "latitude",
-            "longitude",
-            "snapshot_url",
-            "snapshot_timestamp",
-        ]
-    ]
-    exploded_df = cameras.explode("identifications")
-    cameras_identifications = pd.DataFrame(
-        exploded_df["identifications"].tolist(), index=exploded_df.index
-    )
-    return cameras_attr, cameras_identifications
-
-
 def get_table_cameras_with_images(dataframe):
     # filter only flooded cameras
     table_data = (
@@ -150,13 +174,17 @@ def get_agrid_table(data_with_image):
     # gb.configure_column("emoji", header_name="", pinned="left")
     gb.configure_column("object", header_name="Identificador")
     gb.configure_column("label", header_name="Label")
+    gb.configure_column("timestamp", header_name="Data detecção")
     gb.configure_column(
         "label_explanation",
         header_name="Descrição",
         cellStyle={"white-space": "normal"},  # This enables text wrapping
         autoHeight=True,  # Adjusts row height based on content
     )
-    # gb.configure_column("image_url", header_name="URL Imagem")
+
+    gb.configure_column(
+        "snapshot_timestamp", header_name="Data Snapshot", hide=False
+    )  # noqa
     # gb.configure_column("bairro", header_name="Bairro")
     # gb.configure_column("subprefeitura", header_name="Subprefeitura")
     # gb.configure_column("id_bolsao", header_name="ID Bolsão")

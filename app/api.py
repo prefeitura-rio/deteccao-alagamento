@@ -31,13 +31,17 @@ class APIVisionAI:
             response = requests.get(
                 f"{self.BASE_URL}{path}", headers=self.headers, timeout=timeout
             )
+            # response.raise_for_status()
             return response.json()
         except requests.exceptions.ReadTimeout as _:  # noqa
             return {"items": []}
 
     def _get_all_pages(self, path, page_size=300, timeout=120):
+        print(f"Getting all pages for {path}")
         # Initial request to determine the number of pages
-        initial_response = self._get(f"{path}?page=1&size=1")
+        initial_response = self._get(
+            path=f"{path}?page=1&size=1", timeout=timeout
+        )  # noqa
         if not initial_response:
             return []
 
@@ -45,7 +49,7 @@ class APIVisionAI:
         total_pages = self._calculate_total_pages(initial_response, page_size)
 
         # Function to get a single page
-        def get_page(page, timeout):
+        def get_page(page):
             # time each execution
             start = time.time()
             print(f"Getting page {page} of {total_pages}")
@@ -56,10 +60,10 @@ class APIVisionAI:
             return response
 
         data = []
-        with ThreadPoolExecutor(max_workers=total_pages) as executor:
+        with ThreadPoolExecutor(max_workers=20) as executor:
             # Create a future for each page
             futures = [
-                executor.submit(get_page, page, timeout)
+                executor.submit(get_page, page)
                 for page in range(1, total_pages + 1)  # noqa
             ]
 
@@ -67,7 +71,7 @@ class APIVisionAI:
                 response = future.result()
                 if response:
                     data.extend(response["items"])
-
+        print("Getting all pages done!!!")
         return data
 
     def _calculate_total_pages(self, response, page_size):

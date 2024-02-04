@@ -13,7 +13,7 @@ st.markdown("# Mapa de Alagamentos | Vision AI")
 
 # get cameras
 cameras = get_cameras(
-    page_size=300, timeout=120, use_mock_data=False, update_mock_data=False
+    page_size=1000, timeout=600, use_mock_data=False, update_mock_data=True
 )
 cameras_attr, cameras_identifications = treat_data(cameras)
 
@@ -53,7 +53,7 @@ with col2:
     )
 
 # filter both dfs by object and label
-cameras_attr = cameras_attr[
+cameras_filter = cameras_attr[
     cameras_attr.index.isin(
         cameras_identifications[
             cameras_identifications["object"] == object_filter
@@ -61,22 +61,28 @@ cameras_attr = cameras_attr[
     )
 ]
 
-cameras_identifications = cameras_identifications[
+cameras_identifications_filter = cameras_identifications[
     (cameras_identifications["object"] == object_filter)
     & (cameras_identifications["label"].isin(label_filter))
 ]
 
 
 # show cameras dfs
-merged_df = pd.merge(cameras_attr, cameras_identifications, on="id")
+merged_df = pd.merge(cameras_filter, cameras_identifications_filter, on="id")
 merged_df = merged_df[
-    ["timestamp", "object", "label", "label_explanation"]
-].sort_values(by=["timestamp", "label"])
+    [
+        "bairro",
+        "snapshot_timestamp",
+        "timestamp",
+        "object",
+        "label",
+        "label_explanation",
+    ]
+].sort_values(by=["timestamp", "label"], ascending=False)
+
 
 # timestamp to datetime BRL+3 with no tz
-merged_df["timestamp"] = pd.to_datetime(merged_df["timestamp"]).dt.tz_convert(
-    "America/Sao_Paulo"
-)
+
 # make two cols
 col1, col2 = st.columns(2)
 
@@ -85,13 +91,28 @@ with col1:
 
 with col2:
     if selected_row:
-        st.markdown("### 📷 Camera snapshot")
+        row = cameras_filter.loc[selected_row[0]["id"]]
+        camera_name = row["name"]
+        snapshot_timestamp = row["snapshot_timestamp"].strftime(
+            "%d/%m/%Y %H:%M"
+        )  # noqa
+
+        st.markdown(f"### 📷 Camera snapshot")  # noqa
+        st.markdown(f"Endereço: {camera_name}")
+        st.markdown(f"Data Snapshot: {snapshot_timestamp}")
+
         # get cameras_attr url from selected row by id
-        image_url = cameras_attr.loc[selected_row[0]["id"]]["snapshot_url"]
+        image_url = row["snapshot_url"]
         if image_url is None:
             st.markdown("Falha ao capturar o snapshot da câmera.")
         else:
             st.image(image_url)
+
+        camera_identifications = cameras_identifications.loc[
+            selected_row[0]["id"]
+        ]  # noqa
+
+        get_agrid_table(camera_identifications.reset_index())
 
 
 # st.markdown(
