@@ -35,7 +35,6 @@ class APIVisionAI:
         return response.json()
 
     def _get_all_pages(self, path, page_size=100, timeout=120):
-
         # Function to get a single page
         def get_page(page, total_pages):
             # time each execution
@@ -48,7 +47,6 @@ class APIVisionAI:
             return response
 
         if isinstance(path, str):
-
             print(f"Getting all pages for {path}")
             # Initial request to determine the number of pages
             initial_response = self._get(

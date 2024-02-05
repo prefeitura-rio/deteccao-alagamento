@@ -23,7 +23,6 @@ def get_cameras(
     page_size=100,
     timeout=120,
 ):
-
     mock_data_path = "./data/temp/mock_api_data.json"
 
     if use_mock_data:
@@ -234,7 +233,6 @@ def get_table_cameras_with_images(dataframe):
 
 
 def get_agrid_table(table):
-
     gb = GridOptionsBuilder.from_dataframe(table)  # noqa
 
     gb.configure_column("id", header_name="ID Camera", pinned="left")
