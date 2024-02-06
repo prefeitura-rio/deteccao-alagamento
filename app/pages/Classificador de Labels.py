@@ -56,7 +56,6 @@ customized_button = st.markdown(
 
 
 def buttom(label, labels_options):
-
     if st.button(
         label,
         on_click=put_selected_label,
