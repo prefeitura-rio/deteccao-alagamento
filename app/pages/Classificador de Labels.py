@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import streamlit as st
-from utils.utils import (get_cameras, get_objects, get_objetcs_labels_df,
-                         treat_data)
+from utils.utils import get_cameras, get_objects, get_objetcs_labels_df, treat_data
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)

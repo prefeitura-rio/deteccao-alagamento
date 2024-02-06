@@ -6,8 +6,7 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder,
-                       GridUpdateMode)
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
 from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
