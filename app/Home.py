@@ -3,8 +3,14 @@
 
 import streamlit as st
 from streamlit_folium import st_folium  # noqa
-from utils.utils import (create_map, display_camera_details, get_agrid_table,
-                         get_cameras, get_filted_cameras_objects, treat_data)
+from utils.utils import (
+    create_map,
+    display_camera_details,
+    get_agrid_table,
+    get_cameras,
+    get_filted_cameras_objects,
+    treat_data,
+)
 
 st.set_page_config(layout="wide")
 # st.image("./data/logo/logo.png", width=300)
@@ -14,9 +20,7 @@ st.markdown("# Mapa de Alagamentos | Vision AI")
 
 # get cameras
 cameras = get_cameras(
-    only_active=True,
-    page_size=3000,
-    timeout=600,
+    only_active=False,
     use_mock_data=False,
     update_mock_data=True,
 )

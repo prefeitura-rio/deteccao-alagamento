@@ -6,8 +6,7 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder,
-                       GridUpdateMode)
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
 from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
@@ -16,7 +15,7 @@ vision_api = APIVisionAI(
 )
 
 
-@st.cache_data(ttl=60 * 2, persist=False)
+@st.cache_data(ttl=600 * 2, persist=False)
 def get_cameras(
     only_active=True,
     use_mock_data=False,
@@ -45,6 +44,17 @@ def get_cameras(
         with open(mock_data_path, "w") as f:
             json.dump(data, f)
 
+    return data
+
+
+@st.cache_data(ttl=600 * 2, persist=False)
+def get_objects(
+    page_size=100,
+    timeout=120,
+):
+    data = vision_api._get_all_pages(
+        path="/objects", page_size=page_size, timeout=timeout
+    )
     return data
 
 
@@ -95,6 +105,30 @@ def treat_data(response):
     )
 
     return cameras_attr, cameras_identifications
+
+
+def explode_df(df, column_to_explode, prefix=None):
+    exploded_df = df.explode(column_to_explode)
+    new_df = pd.json_normalize(exploded_df[column_to_explode])
+
+    if prefix:
+        new_df = new_df.add_prefix(f"{prefix}_")
+
+    df.drop(columns=column_to_explode, inplace=True)
+    new_df.index = exploded_df.index
+    result_df = df.join(new_df)
+
+    return result_df
+
+
+def get_objetcs_labels_df(objects):
+    objects_df = objects.rename(columns={"id": "object_id"})
+    objects_df = objects_df[["name", "object_id", "labels"]]
+    labels = explode_df(objects_df, "labels")
+    labels = labels[~labels["value"].isin(["null"])]
+    labels = labels.rename(columns={"label_id": "label"})
+    labels = labels.reset_index(drop=True)
+    return labels
 
 
 def get_filted_cameras_objects(
