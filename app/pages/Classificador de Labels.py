@@ -3,8 +3,8 @@ import pandas as pd
 import streamlit as st
 from utils.utils import get_cameras, get_objects, get_objetcs_labels_df, treat_data
 
-st.set_page_config(layout="wide", page_title="Pontos de Alagamento")
-st.image("./data/logo/logo.png", width=300)
+st.set_page_config(layout="wide")
+# st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Classificador de labels | Vision AI")
 
@@ -31,19 +31,6 @@ labels = labels.drop(columns=["name"])
 
 cameras_objs = cameras_objs.head(4)
 
-st.markdown(
-    """
-    <style>
-    .big-button {
-        width: 100%;
-        font-size: 24px;
-        padding: 10px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 
 def put_selected_label(labels_options, label):
     selected_label = labels_options[labels_options["value"] == label]
@@ -51,6 +38,34 @@ def put_selected_label(labels_options, label):
     label_to_put = selected_label.to_dict(orient="records")
     # TODO: make a put for selected object/label
     print(label_to_put, "\n")
+
+
+customized_button = st.markdown(
+    """
+    <style >
+    div.stButton > button:first-child {
+        height: 100% !important;
+        width: 100% !important;
+        font-size: 15px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+    </style>""",
+    unsafe_allow_html=True,
+)
+
+
+def buttom(label, labels_options):
+
+    if st.button(
+        label,
+        on_click=put_selected_label,
+        args=(
+            labels_options,
+            label,
+        ),
+    ):  # noqa
+        pass
 
 
 # Create a state variable to keep track of the current image index
@@ -74,18 +89,21 @@ else:
     snapshot_url = current_image["snapshot_url"]
     st.image(snapshot_url, use_column_width=True)
     labels_options = labels.loc[name]
-    choces = labels_options["value"].tolist()
+    choices = labels_options["value"].tolist()
 
-    st.markdown(f"**Options for {name}:**")
+    st.markdown(
+        f"<h2 style='text-align: center;'>{name}</h2>",
+        unsafe_allow_html=True,
+    )
 
-    for label in choces:
-        if st.button(
-            label,
-            on_click=put_selected_label,
-            args=(
-                labels_options,
-                label,
-            ),
-        ):  # noqa
-            pass
+    # place labels in a grid of 2 columns
+    col1, col2 = st.columns(2)
+    for i, label in enumerate(choices):
+        if i % 2 == 0:
+            with col1:
+                buttom(label, labels_options)
+        else:
+            with col2:
+                buttom(label, labels_options)
+
     st.session_state.current_image_index += 1  # noqa
