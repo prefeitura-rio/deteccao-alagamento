@@ -12,7 +12,7 @@ from utils.utils import (
     treat_data,
 )
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 

@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from utils.utils import get_cameras, get_objects, get_objetcs_labels_df, treat_data
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Classificador de labels | Vision AI")
@@ -29,7 +29,7 @@ labels = get_objetcs_labels_df(objects)
 labels.index = labels["name"]
 labels = labels.drop(columns=["name"])
 
-cameras_objs = cameras_objs.head(4)
+# cameras_objs = cameras_objs.head(4)
 
 
 def put_selected_label(labels_options, label):
@@ -71,6 +71,7 @@ def buttom(label, labels_options):
 if "current_image_index" not in st.session_state:
     st.session_state.current_image_index = 0
 
+
 # Check if there are more images to review
 if st.session_state.current_image_index >= len(cameras_objs):
     st.write("You have reviewed all images.")
@@ -85,8 +86,19 @@ else:
     )  # noqa
     # Extract relevant information
     name = current_image["object"]
+
     snapshot_url = current_image["snapshot_url"]
-    st.image(snapshot_url, use_column_width=True)
+
+    # Center the image
+    st.markdown(
+        f"""
+        <div style='display: flex; justify-content: center; align-items: center;'>
+        <img src='{snapshot_url}' style='max-width: 600px; max-height: 400px;'>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     labels_options = labels.loc[name]
     choices = labels_options["value"].tolist()
 
@@ -96,13 +108,13 @@ else:
     )
 
     # place labels in a grid of 2 columns
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
     for i, label in enumerate(choices):
         if i % 2 == 0:
-            with col1:
+            with col2:
                 buttom(label, labels_options)
         else:
-            with col2:
+            with col3:
                 buttom(label, labels_options)
 
     st.session_state.current_image_index += 1  # noqa
