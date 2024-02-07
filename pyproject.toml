@@ -13,9 +13,11 @@ streamlit-folium = "^0.15.1"
 streamlit-extras = "^0.3.5"
 streamlit-autorefresh = "^1.0.1"
 pillow = "^10.1.0"
-streamlit-aggrid = "^0.3.4.post3"
+streamlit-aggrid = "0.3.4.post3"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
