@@ -3,8 +3,14 @@
 
 import streamlit as st
 from streamlit_folium import st_folium  # noqa
-from utils.utils import (create_map, display_camera_details, get_agrid_table,
-                         get_cameras, get_filted_cameras_objects, treat_data)
+from utils.utils import (
+    create_map,
+    display_camera_details,
+    get_agrid_table,
+    get_cameras,
+    get_filted_cameras_objects,
+    treat_data,
+)
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)

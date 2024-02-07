@@ -71,8 +71,6 @@ def get_translation(label):
             return translation
 
 
-#
-
 snapshots_identifications = [
     {
         "object": "image_condition",
@@ -105,16 +103,17 @@ snapshots = [
 snapshots_objects = explode_df(
     pd.DataFrame(data=snapshots), "snapshot_identification"
 )  # noqa
-# randomize dataframe
-snapshots_objects = snapshots_objects.sample(frac=1)
 
 
 def put_selected_label(label, snapshots_options):
-
     snapshots_to_put = snapshots_options.to_dict()
-
     snapshots_to_put["label"] = label
     # # TODO: make a put for selected object/label
+    if (snapshots_to_put.get("object") == "image_condition") and (
+        label == "poor"
+    ):  # noqa
+        st.session_state.row_index += 3
+
     print(json.dumps(snapshots_to_put, indent=4), "\n")
 
 
@@ -183,16 +182,13 @@ else:
         st.image(snapshot_url)
         st.markdown(
             f"### {translate_dict.get('title')}",
-            unsafe_allow_html=True,
         )
         st.markdown(
             f"**Explicação:** {translate_dict.get('explanation')}",
-            unsafe_allow_html=True,
         )
     # place labels in a grid of 2 columns
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     for i, label in enumerate(choices):
-        print(i, label)
         label_translated = translate_dict.get("labels").get(label)
 
         if i % 2 == 0:
