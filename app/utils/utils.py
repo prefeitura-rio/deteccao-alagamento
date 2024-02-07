@@ -235,15 +235,31 @@ def display_camera_details(row, cameras_identifications):
         )
         st.markdown("<br><br><br><br>", unsafe_allow_html=True)
 
-    st.markdown(f"### 📃 Identificações")
+    st.markdown(f"### 📃 Detalhes")
 
     camera_identifications = cameras_identifications.loc[camera_id]  # noqa
-    selected_cols = ["object", "label", "label_explanation"]
+    camera_identifications = camera_identifications.reset_index(drop=True)
+    camera_identifications.index = camera_identifications["label"].apply(
+        lambda x: get_icon_color(x, type="emoji")
+    )
+    camera_identifications["timestamp"] = camera_identifications["timestamp"].apply(
+        lambda x: x.strftime("%d/%m/%Y %H:%M")
+    )
 
-    st.dataframe(camera_identifications[selected_cols].reset_index())
+    rename_columns = {
+        "timestamp": "Data Identificação",
+        "object": "Identificador",
+        "label": "Label",
+        "label_explanation": "Descrição",
+    }
+    camera_identifications = camera_identifications[list(rename_columns.keys())]
+
+    camera_identifications = camera_identifications.rename(columns=rename_columns)
+
+    st.dataframe(camera_identifications)
 
 
-def get_icon_color(label: Union[bool, None]):
+def get_icon_color(label: Union[bool, None], type=None):
     if label in [
         "major",
         "totally_blocked",
@@ -253,8 +269,13 @@ def get_icon_color(label: Union[bool, None]):
         "true",
         "flodding",
     ]:  # noqa
+        if type == "emoji":
+            return "🔴"
         return "red"
+
     elif label in ["minor", "partially_blocked", "difficult", "puddle"]:
+        if type == "emoji":
+            return "🟠"
         return "orange"
     elif label in [
         "normal",
@@ -265,9 +286,14 @@ def get_icon_color(label: Union[bool, None]):
         "false",
         "low_indifferent",
     ]:
+        if type == "emoji":
+            return "🟢"
+
         return "green"
     else:
-        return "gray"
+        if type == "emoji":
+            return "⚫"
+        return "grey"
 
 
 def create_map(chart_data, location=None):
@@ -302,53 +328,19 @@ def create_map(chart_data, location=None):
     return m
 
 
-def label_emoji(label):
-    if label is True:
-        return "🔴"
-    elif label is False:
-        return "🟢"
-    else:
-        return "⚫"
-
-
-def get_table_cameras_with_images(dataframe):
-    # filter only flooded cameras
-    table_data = (
-        dataframe[dataframe["label"].notnull()]
-        .sort_values(by=["label", "id_camera"], ascending=False)
-        .reset_index(drop=True)
-    )
-    table_data["emoji"] = table_data["label"].apply(label_emoji)
-
-    col_order = [
-        "emoji",
-        "id_camera",
-        "object",
-        "bairro",
-        "subprefeitura",
-        "id_bolsao",
-        "bacia",
-        "sub_bacia",
-        "image_url",
-    ]
-    table_data = table_data[col_order]
-
-    return table_data
-
-
 def get_agrid_table(table):
-    gb = GridOptionsBuilder.from_dataframe(table)  # noqa
-
+    gb = GridOptionsBuilder.from_dataframe(table, index=True)  # noqa
+    gb.configure_column("index", header_name="", pinned="left")
     gb.configure_column("id", header_name="ID Camera", pinned="left")
     gb.configure_column("object", header_name="Identificador")
     gb.configure_column("label", header_name="Label")
     gb.configure_column("timestamp", header_name="Data Identificação")
-    gb.configure_column(
-        "label_explanation",
-        header_name="Descrição",
-        cellStyle={"white-space": "normal"},
-        autoHeight=True,
-    )
+    # gb.configure_column(
+    #     "label_explanation",
+    #     header_name="Descrição",
+    #     cellStyle={"white-space": "normal"},
+    #     autoHeight=True,
+    # )
 
     gb.configure_column(
         "snapshot_timestamp", header_name="Data Snapshot", hide=False

@@ -10,6 +10,7 @@ from utils.utils import (
     get_cameras,
     get_filted_cameras_objects,
     treat_data,
+    get_icon_color,
 )
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
@@ -79,15 +80,22 @@ folium_map = create_map(cameras_identifications_merged.reset_index())
 
 with col1:
     selected_cols = [
-        "bairro",
-        "snapshot_timestamp",
-        "timestamp",
+        "index",
+        "id",
         "object",
         "label",
+        "timestamp",
+        "snapshot_timestamp",
+        "bairro",
     ]
-    selected_row = get_agrid_table(
-        cameras_identifications_merged[selected_cols].reset_index()
-    )  # noqa
+    aggrid_table = cameras_identifications_merged.reset_index()
+
+    aggrid_table["index"] = aggrid_table["label"].apply(
+        lambda label: get_icon_color(label=label, type="emoji")
+    )
+    aggrid_table = aggrid_table[selected_cols]
+    # aggrid_table = aggrid_table[selected_cols]
+    selected_row = get_agrid_table(aggrid_table)  # noqa
 
 with col2:
     if selected_row:

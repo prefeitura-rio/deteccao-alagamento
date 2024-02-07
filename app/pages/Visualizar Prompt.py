@@ -22,6 +22,7 @@ prompt_objects = prompt_parameters.get("objects")
 selected_labels_cols = ["name", "criteria", "identification_guide", "value"]
 labels = labels[selected_labels_cols]
 labels = labels[labels["name"].isin(prompt_objects)]
+labels = labels.rename(columns={"name": "object", "value": "label"})
 objects_table_md = labels.to_markdown(index=False)
 
 
