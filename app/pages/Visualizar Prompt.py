@@ -12,11 +12,12 @@ st.markdown("# Visualizar Prompt | Vision AI")
 
 data = get_prompts()
 objects = pd.DataFrame(get_objects())
-labels = get_objetcs_labels_df(objects)
+labels = get_objetcs_labels_df(objects, keep_null=True)
 
 prompt_parameters = data[0]
 prompt_text = prompt_parameters.get("prompt_text")
 prompt_objects = prompt_parameters.get("objects")
+
 
 selected_labels_cols = ["name", "criteria", "identification_guide", "value"]
 labels = labels[selected_labels_cols]

@@ -172,11 +172,12 @@ def explode_df(dataframe, column_to_explode, prefix=None):
     return result_df
 
 
-def get_objetcs_labels_df(objects):
+def get_objetcs_labels_df(objects, keep_null=False):
     objects_df = objects.rename(columns={"id": "object_id"})
     objects_df = objects_df[["name", "object_id", "labels"]]
     labels = explode_df(objects_df, "labels")
-    labels = labels[~labels["value"].isin(["null"])]
+    if not keep_null:
+        labels = labels[~labels["value"].isin(["null"])]
     labels = labels.rename(columns={"label_id": "label"})
     labels = labels.reset_index(drop=True)
     return labels
