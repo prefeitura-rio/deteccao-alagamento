@@ -6,14 +6,48 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder,
-                       GridUpdateMode)
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
 from utils.api import APIVisionAI
 
-vision_api = APIVisionAI(
-    username=os.environ.get("VISION_API_USERNAME"),
-    password=os.environ.get("VISION_API_PASSWORD"),
-)
+
+def get_vision_ai_api():
+    def user_is_logged_in():
+        if "logged_in" not in st.session_state:
+            st.session_state["logged_in"] = False
+
+        def callback_data():
+            username = st.session_state["username"]
+            password = st.session_state["password"]
+            try:
+                _ = APIVisionAI(
+                    username=username,
+                    password=password,
+                )
+                st.session_state["logged_in"] = True
+            except Exception as exc:
+                st.error(f"Error: {exc}")
+                st.session_state["logged_in"] = False
+
+        if st.session_state["logged_in"]:
+            return True
+
+        st.write("Please login")
+        st.text_input("Username", key="username")
+        st.text_input("Password", key="password", type="password")
+        st.button("Login", on_click=callback_data)
+        return False
+
+    if not user_is_logged_in():
+        st.stop()
+
+    vision_api = APIVisionAI(
+        username=st.session_state["username"],
+        password=st.session_state["password"],
+    )
+    return vision_api
+
+
+vision_api = get_vision_ai_api()
 
 
 @st.cache_data(ttl=600 * 2, persist=False)
