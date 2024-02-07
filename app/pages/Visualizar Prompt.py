@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+
 import pandas as pd
 import streamlit as st
 from utils.utils import get_objects, get_objetcs_labels_df, get_prompts
@@ -23,7 +25,9 @@ objects_table_md = labels.to_markdown(index=False)
 
 
 output_schema = """{\n    "$defs": {\n        "Object": {\n            "properties": {\n                "object": {\n"description": "The object from the objects table",\n"title": "Object",\n"type": "string"\n                },\n                "label_explanation": {\n"description": "Highly detailed visual description of the image given the object context",\n"title": "Label Explanation",\n"type": "string"\n                },\n                "label": {\n"anyOf": [\n    {\n        "type": "boolean"\n    },\n    {\n        "type": "string"\n    },\n    {\n        "type": "null"\n    }\n],\n"description": "Label indicating the condition or characteristic of the object",\n"title": "Label"\n                }\n            },\n            "required": [\n                "object",\n                "label_explanation",\n                "label"\n            ],\n            "title": "Object",\n            "type": "object"\n        }\n    },\n    "properties": {\n        "objects": {\n            "items": {\n                "$ref": "#/$defs/Object"\n            },\n            "title": "Objects",\n            "type": "array"\n        }\n    },\n    "required": [\n        "objects"\n    ],\n    "title": "Output",\n    "type": "object"\n}\n"""  # noqa
+output_schema = json.dumps(json.loads(output_schema), indent=4)
 output_example = """{\n    "objects": [\n        {\n            "object": "<Object from objects table>",\n            "label_explanation": "<Visual description of the image given the object context>",\n            "label": "<Selected label from objects table>"\n        }\n    ]\n}\n"""  # noqa
+output_example = json.dumps(json.loads(output_example), indent=4)
 
 prompt_text = (
     prompt_text.replace("{objects_table_md}", objects_table_md)
