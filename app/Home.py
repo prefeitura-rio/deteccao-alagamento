@@ -3,24 +3,32 @@
 
 import streamlit as st
 from streamlit_folium import st_folium  # noqa
-from utils.utils import (create_map, display_camera_details, get_agrid_table,
-                         get_cameras, get_filted_cameras_objects, treat_data)
+from utils.utils import (
+    create_map,
+    display_camera_details,
+    get_agrid_table,
+    get_cameras,
+    get_filted_cameras_objects,
+    treat_data,
+)
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
-
+DEFAULT_OBJECT = "water_level"
 st.markdown("# Mapa de Alagamentos | Vision AI")
 
 # get cameras
 cameras = get_cameras(
+    page_size=3000,
     only_active=False,
     use_mock_data=False,
-    update_mock_data=True,
+    update_mock_data=False,
 )
 cameras_attr, cameras_identifications = treat_data(cameras)
 
 col1, col2 = st.columns(2)
+
 with col1:
     objects = cameras_identifications["object"].unique().tolist()
     objects.sort()
@@ -28,7 +36,7 @@ with col1:
     object_filter = st.selectbox(
         "Filtrar por objeto",
         objects,
-        index=objects.index("alert_category"),
+        index=objects.index(DEFAULT_OBJECT),
     )
 
 
@@ -45,8 +53,8 @@ with col2:
     )
     labels_default = labels.copy()
 
-    if object_filter == "alert_category":
-        labels_default.remove("normal")
+    # if object_filter == "road_blockade":
+    #     labels_default.remove("normal")
     # dropdown to select label given selected object
     label_filter = st.multiselect(
         "Filtrar por label",
@@ -105,7 +113,7 @@ with col2:
         )
 
 with col1:
-    st_folium(folium_map, key="fig1", height=600, width=800)
+    st_folium(folium_map, key="fig1", height=600, width="100%")
 
     # for camera_id in cameras_identifications_filter.index:
     #     row = cameras_filter.loc[camera_id]

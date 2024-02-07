@@ -6,8 +6,7 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder,
-                       GridUpdateMode)
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
 from utils.api import APIVisionAI
 
 vision_api = APIVisionAI(
@@ -108,7 +107,8 @@ def treat_data(response):
     return cameras_attr, cameras_identifications
 
 
-def explode_df(df, column_to_explode, prefix=None):
+def explode_df(dataframe, column_to_explode, prefix=None):
+    df = dataframe.copy()
     exploded_df = df.explode(column_to_explode)
     new_df = pd.json_normalize(exploded_df[column_to_explode])
 
@@ -172,13 +172,16 @@ def display_camera_details(row, cameras_identifications):
 
     st.markdown(f"### 📷 Camera snapshot")  # noqa
     st.markdown(f"Endereço: {camera_name}")
-    st.markdown(f"Data Snapshot: {snapshot_timestamp}")
+    # st.markdown(f"Data Snapshot: {snapshot_timestamp}")
 
     # get cameras_attr url from selected row by id
     if image_url is None:
         st.markdown("Falha ao capturar o snapshot da câmera.")
     else:
-        st.image(image_url)
+        st.markdown(
+            f"""<img src='{image_url}' style='max-height: 600px;'> """,
+            unsafe_allow_html=True,
+        )
 
     camera_identifications = cameras_identifications.loc[camera_id]  # noqa
     get_agrid_table(table=camera_identifications.reset_index())
@@ -192,11 +195,20 @@ def get_icon_color(label: Union[bool, None]):
         "impossibe",
         "poor",
         "true",
+        "flodding",
     ]:  # noqa
         return "red"
-    elif label in ["minor", "partially_blocked", "difficult"]:
+    elif label in ["minor", "partially_blocked", "difficult", "puddle"]:
         return "orange"
-    elif label in ["normal", "free", "easy", "moderate", "clean", "false"]:
+    elif label in [
+        "normal",
+        "free",
+        "easy",
+        "moderate",
+        "clean",
+        "false",
+        "low_indifferent",
+    ]:
         return "green"
     else:
         return "gray"
@@ -213,10 +225,10 @@ def create_map(chart_data, location=None):
                 chart_data["latitude"].mean(),
                 chart_data["longitude"].mean(),
             ],  # noqa
-            zoom_start=10.0,
+            zoom_start=11,
         )
     else:
-        m = folium.Map(location=[-22.917690, -43.413861], zoom_start=10)
+        m = folium.Map(location=[-22.917690, -43.413861], zoom_start=11)
 
     for _, row in chart_data.iterrows():
         icon_color = get_icon_color(row["label"])
@@ -289,7 +301,7 @@ def get_agrid_table(table):
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_side_bar()
     gb.configure_grid_options(enableCellTextSelection=True)
-    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
+    # gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
     grid_options = gb.build()
 
     grid_response = AgGrid(
@@ -301,7 +313,7 @@ def get_agrid_table(table):
         # fit_columns_on_grid_load=True
         # custom_css=custom_css,
         # allow_unsafe_jscode=True,
-        # height="600px",
+        height=600,
         # width="100%",
     )
 
