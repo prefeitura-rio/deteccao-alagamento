@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deteccao-alagamento
-  namespace: deteccao-alagamento
 spec:
   replicas: 2
   selector:

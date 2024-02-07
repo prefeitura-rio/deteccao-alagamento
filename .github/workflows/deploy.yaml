@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - development
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -49,7 +50,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ 'latest' if github.ref == 'refs/heads/main' else 'latest-dev' }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -61,8 +62,16 @@ jobs:
           curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
           chmod u+x ./kustomize
 
-      - name: Deploy
+      - name: Deploy (Production)
+        if: github.ref == 'refs/heads/main'
         run: |-
           ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE_NAME:TAG=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
           ./kustomize build . | kubectl apply -n deteccao-alagamento -f -
           kubectl rollout status -w -n deteccao-alagamento deployment/deteccao-alagamento
+
+      - name: Deploy (Development)
+        if: github.ref == 'refs/heads/development'
+        run: |-
+          ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE_NAME:TAG=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
+          ./kustomize build . | kubectl apply -n deteccao-alagamento-dev -f -
+          kubectl rollout status -w -n deteccao-alagamento-dev deployment/deteccao-alagamento

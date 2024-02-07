@@ -4,7 +4,6 @@ metadata:
   labels:
     app: deteccao-alagamento
   name: deteccao-alagamento
-  namespace: deteccao-alagamento
 spec:
   ports:
     - name: "80"
