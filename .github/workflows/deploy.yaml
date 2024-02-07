@@ -50,7 +50,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ 'latest' if github.ref == 'refs/heads/main' else 'latest-dev' }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
             org.opencontainers.image.revision=${{ github.sha }}
