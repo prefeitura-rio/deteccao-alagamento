@@ -54,12 +54,12 @@ vision_api = get_vision_ai_api()
 # )
 
 
-@st.cache_data(ttl=600 * 2, persist=False)
+@st.cache_data(ttl=60 * 5, persist=False)
 def get_cameras(
     only_active=True,
     use_mock_data=False,
     update_mock_data=False,
-    page_size=100,
+    page_size=3000,
     timeout=120,
 ):
     mock_data_path = "./data/temp/mock_api_data.json"
@@ -86,13 +86,24 @@ def get_cameras(
     return data
 
 
-@st.cache_data(ttl=600 * 2, persist=False)
+@st.cache_data(ttl=60 * 2, persist=False)
 def get_objects(
     page_size=100,
     timeout=120,
 ):
     data = vision_api._get_all_pages(
         path="/objects", page_size=page_size, timeout=timeout
+    )
+    return data
+
+
+@st.cache_data(ttl=60 * 60, persist=False)
+def get_prompts(
+    page_size=100,
+    timeout=120,
+):
+    data = vision_api._get_all_pages(
+        path="/prompts", page_size=page_size, timeout=timeout
     )
     return data
 
@@ -211,19 +222,24 @@ def display_camera_details(row, cameras_identifications):
 
     st.markdown(f"### 📷 Camera snapshot")  # noqa
     st.markdown(f"Endereço: {camera_name}")
-    # st.markdown(f"Data Snapshot: {snapshot_timestamp}")
+    st.markdown(f"Data Snapshot: {snapshot_timestamp}")
 
     # get cameras_attr url from selected row by id
     if image_url is None:
         st.markdown("Falha ao capturar o snapshot da câmera.")
     else:
         st.markdown(
-            f"""<img src='{image_url}' style='max-height: 600px;'> """,
+            f"""<img src='{image_url}' style='max-width: 100%; max-height: 100%;'> """,  # noqa
             unsafe_allow_html=True,
         )
+        st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+
+    st.markdown(f"### 📃 Identificações")
 
     camera_identifications = cameras_identifications.loc[camera_id]  # noqa
-    get_agrid_table(table=camera_identifications.reset_index())
+    selected_cols = ["object", "label", "label_explanation"]
+
+    st.dataframe(camera_identifications[selected_cols].reset_index())
 
 
 def get_icon_color(label: Union[bool, None]):

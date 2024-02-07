@@ -16,7 +16,7 @@ st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 DEFAULT_OBJECT = "water_level"
-st.markdown("# Mapa de Alagamentos | Vision AI")
+st.markdown("# Identificações | Vision AI")
 
 # get cameras
 cameras = get_cameras(
@@ -84,7 +84,6 @@ with col1:
         "timestamp",
         "object",
         "label",
-        "label_explanation",
     ]
     selected_row = get_agrid_table(
         cameras_identifications_merged[selected_cols].reset_index()
@@ -113,6 +112,7 @@ with col2:
         )
 
 with col1:
+    st.markdown("### 📍 Mapa")
     st_folium(folium_map, key="fig1", height=600, width="100%")
 
     # for camera_id in cameras_identifications_filter.index:

@@ -34,7 +34,7 @@ def get_translation(label):
         },
         {
             "object": "water_in_road",
-            "title": "Há água na via?",
+            "title": "Há indício de chuva?",
             "condition": "Se a resposta for 'Não', associe o rótulo ‘Baixa ou Indiferente’ à opção 3 e pule para 4.",  # noqa
             "explanation": " Inspeção visual para presença de água na pista, que pode variar desde uma leve umidade até condições de alagamento evidente.",  # noqa
             "labels": {
@@ -104,6 +104,14 @@ snapshots_objects = explode_df(
     pd.DataFrame(data=snapshots), "snapshot_identification"
 )  # noqa
 
+objects_number = {
+    object_name: i + 1
+    for i, object_name in enumerate(
+        snapshots_objects["object"].unique().tolist()
+    )  # noqa
+}
+snapshots_objects["question_number"] = snapshots_objects["object"].map(objects_number)
+
 
 def put_selected_label(label, snapshots_options):
     snapshots_to_put = snapshots_options.to_dict()
@@ -162,13 +170,11 @@ if st.session_state.row_index >= len(snapshots_objects):
 else:
     # Get the current image from the DataFrame
     row = snapshots_objects.iloc[st.session_state.row_index]  # noqa
-    st.write(
-        f"INDEX: {st.session_state.row_index +1} / {len(snapshots_objects)}"  # noqa
-    )  # noqa
     # Extract relevant information
     name = row["object"]
     translate_dict = get_translation(name)
     snapshot_url = row["snapshot_url"]
+    question_number = row["question_number"]
 
     labels_options = labels.loc[name]
     choices = labels_options["value"].tolist()
@@ -177,33 +183,31 @@ else:
         choices = ["true", "false"]
 
     # st.write"
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col2:
         st.image(snapshot_url)
+    with col1:
         st.markdown(
-            f"### {translate_dict.get('title')}",
+            f"### {question_number}.  {translate_dict.get('title')}",
         )
         st.markdown(
             f"**Explicação:** {translate_dict.get('explanation')}",
         )
     # place labels in a grid of 2 columns
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
     for i, label in enumerate(choices):
         label_translated = translate_dict.get("labels").get(label)
-
-        if i % 2 == 0:
-            with col3:
-                buttom(
-                    label=label,
-                    label_translated=label_translated,
-                    row=row,
-                )
-        else:
-            with col4:
-                buttom(
-                    label=label,
-                    label_translated=label_translated,
-                    row=row,
-                )
+        with col1:
+            buttom(
+                label=label,
+                label_translated=label_translated,
+                row=row,
+            )
+        # else:
+        #     with col4:
+        #         buttom(
+        #             label=label,
+        #             label_translated=label_translated,
+        #             row=row,
+        #         )
 
     st.session_state.row_index += 1  # noqa
