@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import json  # noqa
-import os
+import os  # noqa
 from typing import Union
 
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import (AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder,
-                       GridUpdateMode)
+from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
 from utils.api import APIVisionAI
 
 
@@ -49,6 +48,10 @@ def get_vision_ai_api():
 
 
 vision_api = get_vision_ai_api()
+# vision_api = APIVisionAI(
+#     username=os.environ.get("VISION_API_USERNAME"),
+#     password=os.environ.get("VISION_API_PASSWORD"),
+# )
 
 
 @st.cache_data(ttl=600 * 2, persist=False)
