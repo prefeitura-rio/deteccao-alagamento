@@ -59,7 +59,7 @@ vision_api = get_vision_ai_api()
 # )
 
 
-@st.cache_data(ttl=60 * 5, persist=False)
+@st.cache_data(ttl=60 * 2, persist=False)
 def get_cameras(
     only_active=True,
     use_mock_data=False,

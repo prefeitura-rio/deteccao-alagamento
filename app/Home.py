@@ -23,7 +23,7 @@ st.markdown("## Identificações | Vision AI")
 cameras = get_cameras(
     page_size=3000,
     only_active=False,
-    use_mock_data=True,
+    use_mock_data=False,
     update_mock_data=False,
 )
 cameras_attr, cameras_identifications = treat_data(cameras)
