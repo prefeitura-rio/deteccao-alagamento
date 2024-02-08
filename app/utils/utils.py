@@ -239,13 +239,15 @@ def display_camera_details(row, cameras_identifications):
 
     camera_identifications = cameras_identifications.loc[camera_id]  # noqa
     camera_identifications = camera_identifications.reset_index(drop=True)
-    camera_identifications.index = camera_identifications["label"].apply(
+
+    camera_identifications[""] = camera_identifications["label"].apply(
         lambda x: get_icon_color(x, type="emoji")
     )
+    camera_identifications.index = camera_identifications[""]
+
     camera_identifications["timestamp"] = camera_identifications["timestamp"].apply(
         lambda x: x.strftime("%d/%m/%Y %H:%M")
     )
-
     rename_columns = {
         "timestamp": "Data Identificação",
         "object": "Identificador",
