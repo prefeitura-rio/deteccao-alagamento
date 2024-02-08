@@ -183,7 +183,7 @@ else:
         choices = ["true", "false"]
 
     # st.write"
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1.5])
     with col2:
         st.image(snapshot_url)
     with col1:
