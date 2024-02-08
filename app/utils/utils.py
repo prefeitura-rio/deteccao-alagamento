@@ -220,56 +220,6 @@ def get_filted_cameras_objects(
     )
 
 
-def display_camera_details(row, cameras_identifications):
-    camera_id = row.name
-    image_url = row["snapshot_url"]
-    camera_name = row["name"]
-    snapshot_timestamp = row["snapshot_timestamp"].strftime("%d/%m/%Y %H:%M")  # noqa
-
-    st.markdown(f"### 📷 Camera snapshot")  # noqa
-    st.markdown(f"Endereço: {camera_name}")
-    st.markdown(f"Data Snapshot: {snapshot_timestamp}")
-
-    # get cameras_attr url from selected row by id
-    if image_url is None:
-        st.markdown("Falha ao capturar o snapshot da câmera.")
-    else:
-        st.markdown(
-            f"""<img src='{image_url}' style='max-width: 100%; max-height: 100%;'> """,  # noqa
-            unsafe_allow_html=True,
-        )
-        st.markdown("<br><br><br><br>", unsafe_allow_html=True)
-
-    st.markdown("### 📃 Detalhes")
-
-    camera_identifications = cameras_identifications.loc[camera_id]  # noqa
-    camera_identifications = camera_identifications.reset_index(drop=True)
-
-    camera_identifications[""] = camera_identifications["label"].apply(
-        lambda x: get_icon_color(x, type="emoji")
-    )
-    camera_identifications.index = camera_identifications[""]
-
-    camera_identifications["timestamp"] = camera_identifications[
-        "timestamp"
-    ].apply(  # noqa
-        lambda x: x.strftime("%d/%m/%Y %H:%M")
-    )
-    rename_columns = {
-        "timestamp": "Data Identificação",
-        "object": "Identificador",
-        "label": "Label",
-        "label_explanation": "Descrição",
-    }
-    camera_identifications = camera_identifications[list(rename_columns.keys())]  # noqa
-
-    camera_identifications = camera_identifications.rename(
-        columns=rename_columns
-    )  # noqa
-
-    st.dataframe(camera_identifications)
-
-
 def get_icon_color(label: Union[bool, None], type=None):
     if label in [
         "major",
@@ -339,7 +289,57 @@ def create_map(chart_data, location=None):
     return m
 
 
-def get_agrid_table(table):
+def display_camera_details(row, cameras_identifications):
+    camera_id = row.name
+    image_url = row["snapshot_url"]
+    camera_name = row["name"]
+    snapshot_timestamp = row["snapshot_timestamp"].strftime("%d/%m/%Y %H:%M")  # noqa
+
+    st.markdown(f"### 📷 Camera snapshot")  # noqa
+    st.markdown(f"Endereço: {camera_name}")
+    # st.markdown(f"Data Snapshot: {snapshot_timestamp}")
+
+    # get cameras_attr url from selected row by id
+    if image_url is None:
+        st.markdown("Falha ao capturar o snapshot da câmera.")
+    else:
+        st.markdown(
+            f"""<img src='{image_url}' style='max-width: 100%; max-height: 371px;'> """,  # noqa
+            unsafe_allow_html=True,
+        )
+        st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("### 📃 Detalhes")
+
+    camera_identifications = cameras_identifications.loc[camera_id]  # noqa
+    camera_identifications = camera_identifications.reset_index(drop=True)
+
+    camera_identifications[""] = camera_identifications["label"].apply(
+        lambda x: get_icon_color(x, type="emoji")
+    )
+    camera_identifications.index = camera_identifications[""]
+
+    camera_identifications["timestamp"] = camera_identifications[
+        "timestamp"
+    ].apply(  # noqa
+        lambda x: x.strftime("%d/%m/%Y %H:%M")
+    )
+    rename_columns = {
+        "timestamp": "Data Identificação",
+        "object": "Identificador",
+        "label": "Label",
+        "label_explanation": "Descrição",
+    }
+    camera_identifications = camera_identifications[list(rename_columns.keys())]  # noqa
+
+    camera_identifications = camera_identifications.rename(
+        columns=rename_columns
+    )  # noqa
+
+    st.dataframe(camera_identifications)
+
+
+def display_agrid_table(table):
     gb = GridOptionsBuilder.from_dataframe(table, index=True)  # noqa
 
     gb.configure_column("index", header_name="", pinned="left")
@@ -363,7 +363,7 @@ def get_agrid_table(table):
         wrapText=True,
         hide=True,
     )
-
+    gb.configure_side_bar()
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_grid_options(enableCellTextSelection=True)
     # gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
@@ -375,7 +375,7 @@ def get_agrid_table(table):
         update_mode=GridUpdateMode.MODEL_CHANGED
         | GridUpdateMode.COLUMN_RESIZED,  # noqa
         # fit_columns_on_grid_load=True,
-        height=600,
+        height=413,
         custom_css={
             "#gridToolBar": {
                 "padding-bottom": "0px !important",

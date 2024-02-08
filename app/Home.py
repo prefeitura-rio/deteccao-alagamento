@@ -5,25 +5,25 @@ import streamlit as st
 from streamlit_folium import st_folium  # noqa
 from utils.utils import (
     create_map,
+    display_agrid_table,
     display_camera_details,
-    get_agrid_table,
     get_cameras,
     get_filted_cameras_objects,
-    treat_data,
     get_icon_color,
+    treat_data,
 )
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 DEFAULT_OBJECT = "water_level"
-st.markdown("# Identificações | Vision AI")
+st.markdown("## Identificações | Vision AI")
 
 # get cameras
 cameras = get_cameras(
     page_size=3000,
     only_active=False,
-    use_mock_data=False,
+    use_mock_data=True,
     update_mock_data=False,
 )
 cameras_attr, cameras_identifications = treat_data(cameras)
@@ -95,7 +95,8 @@ with col1:
     )
     aggrid_table = aggrid_table[selected_cols]
     # aggrid_table = aggrid_table[selected_cols]
-    selected_row = get_agrid_table(aggrid_table)  # noqa
+    st.markdown("### 📈 Identificações")
+    selected_row = display_agrid_table(aggrid_table)  # noqa
 
 with col2:
     if selected_row:
