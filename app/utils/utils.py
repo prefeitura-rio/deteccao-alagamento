@@ -6,7 +6,12 @@ from typing import Union
 import folium
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid, ColumnsAutoSizeMode, GridOptionsBuilder, GridUpdateMode
+from st_aggrid import (
+    AgGrid,
+    ColumnsAutoSizeMode,
+    GridOptionsBuilder,
+    GridUpdateMode,
+)
 from utils.api import APIVisionAI
 
 
@@ -235,7 +240,7 @@ def display_camera_details(row, cameras_identifications):
         )
         st.markdown("<br><br><br><br>", unsafe_allow_html=True)
 
-    st.markdown(f"### 📃 Detalhes")
+    st.markdown("### 📃 Detalhes")
 
     camera_identifications = cameras_identifications.loc[camera_id]  # noqa
     camera_identifications = camera_identifications.reset_index(drop=True)
@@ -245,7 +250,9 @@ def display_camera_details(row, cameras_identifications):
     )
     camera_identifications.index = camera_identifications[""]
 
-    camera_identifications["timestamp"] = camera_identifications["timestamp"].apply(
+    camera_identifications["timestamp"] = camera_identifications[
+        "timestamp"
+    ].apply(  # noqa
         lambda x: x.strftime("%d/%m/%Y %H:%M")
     )
     rename_columns = {
@@ -254,9 +261,11 @@ def display_camera_details(row, cameras_identifications):
         "label": "Label",
         "label_explanation": "Descrição",
     }
-    camera_identifications = camera_identifications[list(rename_columns.keys())]
+    camera_identifications = camera_identifications[list(rename_columns.keys())]  # noqa
 
-    camera_identifications = camera_identifications.rename(columns=rename_columns)
+    camera_identifications = camera_identifications.rename(
+        columns=rename_columns
+    )  # noqa
 
     st.dataframe(camera_identifications)
 
@@ -332,39 +341,46 @@ def create_map(chart_data, location=None):
 
 def get_agrid_table(table):
     gb = GridOptionsBuilder.from_dataframe(table, index=True)  # noqa
-    gb.configure_column("index", header_name="", pinned="left")
-    gb.configure_column("id", header_name="ID Camera", pinned="left")
-    gb.configure_column("object", header_name="Identificador")
-    gb.configure_column("label", header_name="Label")
-    gb.configure_column("timestamp", header_name="Data Identificação")
-    # gb.configure_column(
-    #     "label_explanation",
-    #     header_name="Descrição",
-    #     cellStyle={"white-space": "normal"},
-    #     autoHeight=True,
-    # )
 
+    gb.configure_column("index", header_name="", pinned="left")
+    gb.configure_column("id", header_name="ID Camera", pinned="left")  # noqa
+    gb.configure_column("object", header_name="Identificador", wrapText=True)
+    gb.configure_column("label", header_name="Label", wrapText=True)
     gb.configure_column(
-        "snapshot_timestamp", header_name="Data Snapshot", hide=False
+        "timestamp", header_name="Data Identificação", wrapText=True
     )  # noqa
+    gb.configure_column(
+        "snapshot_timestamp",
+        header_name="Data Snapshot",
+        hide=False,
+        wrapText=True,  # noqa
+    )  # noqa
+    gb.configure_column(
+        "label_explanation",
+        header_name="Descrição",
+        cellStyle={"white-space": "normal"},
+        autoHeight=True,
+        wrapText=True,
+        hide=True,
+    )
 
     gb.configure_selection("single", use_checkbox=False)
-    gb.configure_side_bar()
     gb.configure_grid_options(enableCellTextSelection=True)
     # gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)  # noqa
     grid_options = gb.build()
-
     grid_response = AgGrid(
         table,
         gridOptions=grid_options,
         columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
         update_mode=GridUpdateMode.MODEL_CHANGED
         | GridUpdateMode.COLUMN_RESIZED,  # noqa
-        # fit_columns_on_grid_load=True
-        # custom_css=custom_css,
-        # allow_unsafe_jscode=True,
+        # fit_columns_on_grid_load=True,
         height=600,
-        # width="100%",
+        custom_css={
+            "#gridToolBar": {
+                "padding-bottom": "0px !important",
+            }
+        },
     )
 
     selected_row = grid_response["selected_rows"]

@@ -22,3 +22,13 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 
+[tool.flake8]
+max-line-length = 80
+exclude = [".git", "__pycache__", "dist"]
+max-complexity = 10
+
+[tool.isort]
+atomic = true
+profile = "black"
+line_length = 80
+skip_gitignore = true
