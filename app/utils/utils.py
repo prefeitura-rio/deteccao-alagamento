@@ -318,7 +318,9 @@ def display_camera_details(row, cameras_identifications):
         lambda x: get_icon_color(x, type="emoji")
     )
     camera_identifications.index = camera_identifications[""]
-
+    camera_identifications = camera_identifications[
+        camera_identifications["timestamp"].notnull()
+    ]
     camera_identifications["timestamp"] = camera_identifications[
         "timestamp"
     ].apply(  # noqa
