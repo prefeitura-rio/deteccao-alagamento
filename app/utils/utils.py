@@ -59,7 +59,6 @@ vision_api = get_vision_ai_api()
 # )
 
 
-@st.cache_data(ttl=60 * 2, persist=False)
 def get_cameras(
     only_active=True,
     use_mock_data=False,
@@ -91,7 +90,6 @@ def get_cameras(
     return data
 
 
-@st.cache_data(ttl=60 * 2, persist=False)
 def get_objects(
     page_size=100,
     timeout=120,
@@ -102,7 +100,6 @@ def get_objects(
     return data
 
 
-@st.cache_data(ttl=60 * 60, persist=False)
 def get_prompts(
     page_size=100,
     timeout=120,
@@ -111,6 +108,33 @@ def get_prompts(
         path="/prompts", page_size=page_size, timeout=timeout
     )
     return data
+
+
+@st.cache_data(ttl=60 * 2, persist=False)
+def get_cameras_cash(
+    only_active=True,
+    use_mock_data=False,
+    update_mock_data=False,
+    page_size=3000,
+    timeout=120,
+):
+    return get_cameras(
+        only_active=only_active,
+        use_mock_data=use_mock_data,
+        update_mock_data=update_mock_data,
+        page_size=page_size,
+        timeout=timeout,
+    )
+
+
+@st.cache_data(ttl=60 * 2, persist=False)
+def get_objects_cash(page_size=100, timeout=120):
+    return get_objects(page_size=page_size, timeout=timeout)
+
+
+@st.cache_data(ttl=60 * 2, persist=False)
+def get_prompts_cash(page_size=100, timeout=120):
+    return get_prompts(page_size=page_size, timeout=timeout)
 
 
 def treat_data(response):

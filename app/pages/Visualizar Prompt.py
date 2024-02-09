@@ -3,18 +3,46 @@ import json
 
 import pandas as pd
 import streamlit as st
-from utils.utils import get_objects, get_objetcs_labels_df, get_prompts
+from utils.utils import (
+    get_objects,
+    get_objects_cash,
+    get_objetcs_labels_df,
+    get_prompts,
+    get_prompts_cash,
+)
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Visualizar Prompt | Vision AI")
 
-data = get_prompts()
-objects = pd.DataFrame(get_objects())
+
+# Function to fetch and update data
+def fetch_and_update_prompts(bypass_cash=False):
+    if bypass_cash:
+        return get_prompts()
+    return get_prompts_cash()
+
+
+def fetch_and_update_objects(bypass_cash=False):
+    if bypass_cash:
+        return get_objects()
+    return get_objects_cash()
+
+
+prompt_data = fetch_and_update_prompts()
+objects_data = fetch_and_update_objects()
+
+# Add a button for updating data
+if st.button("Update Data"):
+    prompt_data = fetch_and_update_prompts(bypass_cash=True)
+    objects_data = fetch_and_update_objects(bypass_cash=True)
+    st.success("Data updated successfully!")
+
+objects = pd.DataFrame(objects_data)
 labels = get_objetcs_labels_df(objects, keep_null=True)
 
-prompt_parameters = data[0]
+prompt_parameters = prompt_data[0]
 prompt_text = prompt_parameters.get("prompt_text")
 prompt_objects = prompt_parameters.get("objects")
 

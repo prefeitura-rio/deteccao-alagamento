@@ -8,6 +8,7 @@ from utils.utils import (
     display_agrid_table,
     display_camera_details,
     get_cameras,
+    get_cameras_cash,
     get_filted_cameras_objects,
     get_icon_color,
     treat_data,
@@ -19,15 +20,36 @@ st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 DEFAULT_OBJECT = "water_level"
 st.markdown("## Identificações | Vision AI")
 
-# get cameras
-cameras = get_cameras(
-    page_size=3000,
-    only_active=False,
-    use_mock_data=False,
-    update_mock_data=False,
-)
-cameras_attr, cameras_identifications = treat_data(cameras)
 
+# Function to fetch and update data
+def fetch_and_update_data(bypass_cash=False):
+    page_size = 3000
+    only_active = False
+    use_mock_data = False
+    update_mock_data = True
+
+    if bypass_cash:
+        return get_cameras(
+            page_size=page_size,
+            only_active=only_active,
+            use_mock_data=use_mock_data,
+            update_mock_data=update_mock_data,
+        )
+    return get_cameras_cash(
+        page_size=page_size,
+        only_active=only_active,
+        use_mock_data=use_mock_data,
+        update_mock_data=update_mock_data,
+    )
+
+
+cameras = fetch_and_update_data()
+# Add a button for updating data
+if st.button("Update Data"):
+    cameras = fetch_and_update_data(bypass_cash=True)
+    st.success("Data updated successfully!")
+
+cameras_attr, cameras_identifications = treat_data(cameras)
 col1, col2 = st.columns(2)
 
 with col1:
