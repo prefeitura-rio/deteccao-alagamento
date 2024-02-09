@@ -8,7 +8,7 @@ from utils.utils import (
     display_agrid_table,
     display_camera_details,
     get_cameras,
-    get_cameras_cash,
+    get_cameras_cache,
     get_filted_cameras_objects,
     get_icon_color,
     treat_data,
@@ -35,7 +35,7 @@ def fetch_and_update_data(bypass_cash=False):
             use_mock_data=use_mock_data,
             update_mock_data=update_mock_data,
         )
-    return get_cameras_cash(
+    return get_cameras_cache(
         page_size=page_size,
         only_active=only_active,
         use_mock_data=use_mock_data,

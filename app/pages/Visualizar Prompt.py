@@ -5,10 +5,10 @@ import pandas as pd
 import streamlit as st
 from utils.utils import (
     get_objects,
-    get_objects_cash,
+    get_objects_cache,
     get_objetcs_labels_df,
     get_prompts,
-    get_prompts_cash,
+    get_prompts_cache,
 )
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
@@ -21,13 +21,13 @@ st.markdown("# Visualizar Prompt | Vision AI")
 def fetch_and_update_prompts(bypass_cash=False):
     if bypass_cash:
         return get_prompts()
-    return get_prompts_cash()
+    return get_prompts_cache()
 
 
 def fetch_and_update_objects(bypass_cash=False):
     if bypass_cash:
         return get_objects()
-    return get_objects_cash()
+    return get_objects_cache()
 
 
 prompt_data = fetch_and_update_prompts()

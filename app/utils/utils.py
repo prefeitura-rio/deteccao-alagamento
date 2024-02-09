@@ -111,7 +111,7 @@ def get_prompts(
 
 
 @st.cache_data(ttl=60 * 2, persist=False)
-def get_cameras_cash(
+def get_cameras_cache(
     only_active=True,
     use_mock_data=False,
     update_mock_data=False,
@@ -128,12 +128,12 @@ def get_cameras_cash(
 
 
 @st.cache_data(ttl=60 * 2, persist=False)
-def get_objects_cash(page_size=100, timeout=120):
+def get_objects_cache(page_size=100, timeout=120):
     return get_objects(page_size=page_size, timeout=timeout)
 
 
 @st.cache_data(ttl=60 * 2, persist=False)
-def get_prompts_cash(page_size=100, timeout=120):
+def get_prompts_cache(page_size=100, timeout=120):
     return get_prompts(page_size=page_size, timeout=timeout)
 
 
