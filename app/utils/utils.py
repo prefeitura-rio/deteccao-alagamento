@@ -4,6 +4,7 @@ import os  # noqa
 from typing import Union
 
 import folium
+import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import (
@@ -148,6 +149,7 @@ def treat_data(response):
     cameras["snapshot_timestamp"] = pd.to_datetime(
         cameras["snapshot_timestamp"]
     ).dt.tz_convert("America/Sao_Paulo")
+
     cameras = cameras.sort_values(by=["snapshot_timestamp"])
     cameras = cameras.merge(cameras_aux, on="id", how="left")
     cameras_attr = cameras[
@@ -236,7 +238,12 @@ def get_filted_cameras_objects(
     cameras_identifications_merged = cameras_identifications_merged.sort_values(  # noqa
         by=["timestamp", "label"], ascending=False
     )
-
+    cameras_identifications_merged["old_snapshot"] = np.where(
+        cameras_identifications_merged["snapshot_timestamp"]
+        > cameras_identifications_merged["timestamp"],
+        "Sim",
+        "Não",
+    )
     return (
         cameras_identifications_merged,
         cameras_filter,
@@ -299,11 +306,18 @@ def create_map(chart_data, location=None):
 
     for _, row in chart_data.iterrows():
         icon_color = get_icon_color(row["label"])
+        htmlcode = f"""<div>
+        <img src="{row["snapshot_url"]}" width="300" height="185">
+
+        <br /><span>ID: {row["id"]}<br>Label: {row["label"]}</span>
+        </div>
+        """
         folium.Marker(
             location=[row["latitude"], row["longitude"]],
             # Adicionar id_camera ao tooltip
             tooltip=f"ID: {row['id']}<br>Label: {row['label']}",
             # Alterar a cor do ícone de acordo com o status
+            popup=htmlcode,
             icon=folium.features.DivIcon(
                 icon_size=(15, 15),
                 icon_anchor=(7, 7),
@@ -350,6 +364,7 @@ def display_camera_details(row, cameras_identifications):
     ].apply(  # noqa
         lambda x: x.strftime("%d/%m/%Y %H:%M")
     )
+
     rename_columns = {
         "timestamp": "Data Identificação",
         "object": "Identificador",
@@ -389,6 +404,7 @@ def display_agrid_table(table):
         wrapText=True,
         hide=True,
     )
+    gb.configure_column("old_snapshot", header_name="Predição Desatualizada")
     gb.configure_side_bar()
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_grid_options(enableCellTextSelection=True)

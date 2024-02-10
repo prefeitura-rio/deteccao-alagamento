@@ -109,6 +109,7 @@ with col1:
         "timestamp",
         "snapshot_timestamp",
         "bairro",
+        "old_snapshot",
     ]
     aggrid_table = cameras_identifications_merged.reset_index()
 
