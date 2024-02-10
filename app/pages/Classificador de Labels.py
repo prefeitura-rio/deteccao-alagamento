@@ -3,18 +3,18 @@ import json
 
 import pandas as pd
 import streamlit as st
-from utils.utils import explode_df, get_objects, get_objetcs_labels_df
+from utils.utils import explode_df, get_objects_cache, get_objetcs_labels_df
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Classificador de labels | Vision AI")
 
-objects = pd.DataFrame(get_objects())
+objects = pd.DataFrame(get_objects_cache())
 
 labels = get_objetcs_labels_df(objects)
-labels.index = labels["name"]
-labels = labels.drop(columns=["name"])
+# labels.index = labels["name"]
+# labels = labels.drop(columns=["name"])
 
 
 # https://docs.google.com/document/d/1PRCjbIJw4_g3-p4gLjYoN0qTaenephyZyOsiOfVGWzM/edit
@@ -23,17 +23,17 @@ labels = labels.drop(columns=["name"])
 def get_translation(label):
     markdown_translation = [
         {
-            "object": "image_condition",
-            "title": "A imagem está nítida?",
-            "condition": "Se a resposta for 'Não', pule para a próxima imagem.",  # noqa
+            "object": "image_corrupted",
+            "title": "A imagem está corrompida?",
+            "condition": "Se a resposta for 'Sim', pule para a próxima imagem.",  # noqa
             "explanation": "Confira se os detalhes na imagem estão claros e definidos. Uma imagem considerada nítida permite a identificação dos objetos e do cenário.",  # noqa
             "labels": {
-                "clean": "Sim",
-                "poor": "Não",
+                "true": "Sim",
+                "false": "Não",
             },
         },
         {
-            "object": "water_in_road",
+            "object": "rain",
             "title": "Há indício de chuva?",
             "condition": "Se a resposta for 'Não', associe o rótulo ‘Baixa ou Indiferente’ à opção 3 e pule para 4.",  # noqa
             "explanation": " Inspeção visual para presença de água na pista, que pode variar desde uma leve umidade até condições de alagamento evidente.",  # noqa
@@ -48,9 +48,9 @@ def get_translation(label):
             "condition": "Se a resposta for 'Não', pule para a próxima imagem.",  # noqa
             "explanation": "Estime o volume de água presente na pista, categorizando-o como um muito baixa (menos que ¼ da roda de um veículo de passeio), bolsão (entre ¼ e  ½ da roda), ou alagamento (mais que ½ da roda).",  # noqa
             "labels": {
-                "low_indifferent": "Baixa ou Indiferente",
-                "puddle": "Bolsão d'água",
-                "flodding": "Alagamento",
+                "low": "Baixa ou Indiferente",
+                "medium": "Bolsão d'água",
+                "high": "Alagamento",
             },
         },
         {
@@ -60,8 +60,8 @@ def get_translation(label):
             "explanation": "Avalie se há algum obstáculo na via que impeça a circulação de veículos. O obstáculo pode ser um acúmulo de água, árvore caída, carro enguiçado, entre outros.",  # noqa
             "labels": {
                 "free": "Sem obstáculos",
-                "partially_blocked": "Via parcialmente bloqueada",
-                "totally_blocked": "Via bloqueada",
+                "partially": "Via parcialmente bloqueada",
+                "totally": "Via bloqueada",
             },
         },
     ]
@@ -73,11 +73,11 @@ def get_translation(label):
 
 snapshots_identifications = [
     {
-        "object": "image_condition",
+        "object": "image_corrupted",
         "label": "none",
     },
     {
-        "object": "water_in_road",
+        "object": "rain",
         "label": "none",
     },
     {
@@ -110,16 +110,19 @@ objects_number = {
         snapshots_objects["object"].unique().tolist()
     )  # noqa
 }
-snapshots_objects["question_number"] = snapshots_objects["object"].map(objects_number)
+snapshots_objects["question_number"] = snapshots_objects["object"].map(
+    objects_number
+)  # noqa
 
 
 def put_selected_label(label, snapshots_options):
     snapshots_to_put = snapshots_options.to_dict()
     snapshots_to_put["label"] = label
     # # TODO: make a put for selected object/label
-    if (snapshots_to_put.get("object") == "image_condition") and (
-        label == "poor"
+    if (snapshots_to_put.get("object") == "image_corrupted") and (
+        label == "true"
     ):  # noqa
+        print("HEREEE")
         st.session_state.row_index += 3
 
     print(json.dumps(snapshots_to_put, indent=4), "\n")
@@ -175,10 +178,11 @@ else:
     translate_dict = get_translation(name)
     snapshot_url = row["snapshot_url"]
     question_number = row["question_number"]
+    labels_options = labels[labels["name"] == name]
 
-    labels_options = labels.loc[name]
     choices = labels_options["value"].tolist()
     choices.sort()
+
     if "true" in choices:
         choices = ["true", "false"]
 

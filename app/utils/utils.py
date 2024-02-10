@@ -7,12 +7,9 @@ import folium
 import numpy as np
 import pandas as pd
 import streamlit as st
-from st_aggrid import (
-    AgGrid,
-    ColumnsAutoSizeMode,
-    GridOptionsBuilder,
-    GridUpdateMode,
-)
+from st_aggrid import GridOptionsBuilder  # noqa
+from st_aggrid import GridUpdateMode  # noqa
+from st_aggrid import AgGrid, ColumnsAutoSizeMode  # noqa
 from utils.api import APIVisionAI
 
 
@@ -53,11 +50,11 @@ def get_vision_ai_api():
     return vision_api
 
 
-vision_api = get_vision_ai_api()
-# vision_api = APIVisionAI(
-#     username=os.environ.get("VISION_API_USERNAME"),
-#     password=os.environ.get("VISION_API_PASSWORD"),
-# )
+# vision_api = get_vision_ai_api()
+vision_api = APIVisionAI(
+    username=os.environ.get("VISION_API_USERNAME"),
+    password=os.environ.get("VISION_API_PASSWORD"),
+)
 
 
 def get_cameras(
@@ -260,12 +257,21 @@ def get_icon_color(label: Union[bool, None], type=None):
         "poor",
         "true",
         "flodding",
+        "high",
+        "totally",
     ]:  # noqa
         if type == "emoji":
             return "🔴"
         return "red"
 
-    elif label in ["minor", "partially_blocked", "difficult", "puddle"]:
+    elif label in [
+        "minor",
+        "partially_blocked",
+        "difficult",
+        "puddle",
+        "medium",
+        "partially",
+    ]:
         if type == "emoji":
             return "🟠"
         return "orange"
@@ -277,6 +283,7 @@ def get_icon_color(label: Union[bool, None], type=None):
         "clean",
         "false",
         "low_indifferent",
+        "low",
     ]:
         if type == "emoji":
             return "🟢"
