@@ -26,7 +26,7 @@ def fetch_and_update_data(bypass_cash=False):
     page_size = 3000
     only_active = False
     use_mock_data = False
-    update_mock_data = True
+    update_mock_data = False
 
     if bypass_cash:
         return get_cameras(
