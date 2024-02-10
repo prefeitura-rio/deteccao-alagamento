@@ -50,11 +50,11 @@ def get_vision_ai_api():
     return vision_api
 
 
-# vision_api = get_vision_ai_api()
-vision_api = APIVisionAI(
-    username=os.environ.get("VISION_API_USERNAME"),
-    password=os.environ.get("VISION_API_PASSWORD"),
-)
+vision_api = get_vision_ai_api()
+# vision_api = APIVisionAI(
+#     username=os.environ.get("VISION_API_USERNAME"),
+#     password=os.environ.get("VISION_API_PASSWORD"),
+# )
 
 
 def get_cameras(
