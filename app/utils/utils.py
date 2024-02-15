@@ -4,7 +4,6 @@ import os  # noqa
 from typing import Union
 
 import folium
-import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import GridOptionsBuilder  # noqa
@@ -137,20 +136,18 @@ def get_prompts_cache(page_size=100, timeout=120):
 
 def treat_data(response):
     cameras_aux = pd.read_csv("./data/database/cameras_aux.csv", dtype=str)
-    cameras_aux = cameras_aux.rename(columns={"id_camera": "id"}).set_index(
-        "id"
-    )  # noqa
-    # To dataframe
-    cameras = pd.DataFrame(response).set_index("id")
-    cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
-    cameras["snapshot_timestamp"] = pd.to_datetime(
-        cameras["snapshot_timestamp"]
-    ).dt.tz_convert("America/Sao_Paulo")
 
-    cameras = cameras.sort_values(by=["snapshot_timestamp"])
-    cameras = cameras.merge(cameras_aux, on="id", how="left")
+    cameras_aux = cameras_aux.rename(columns={"id_camera": "camera_id"})
+    cameras = pd.DataFrame(response)
+    cameras = cameras.rename(columns={"id": "camera_id"})
+    cameras = cameras[cameras["identifications"].apply(lambda x: len(x) > 0)]
+    if len(cameras) == 0:
+        return None, None
+    cameras = cameras.merge(cameras_aux, on="camera_id", how="left")
+
     cameras_attr = cameras[
         [
+            "camera_id",
             "bairro",
             "subprefeitura",
             "name",
@@ -158,8 +155,8 @@ def treat_data(response):
             # "update_interval",
             "latitude",
             "longitude",
-            "snapshot_url",
-            "snapshot_timestamp",
+            "identifications",
+            # "snapshot_url",
             # "id_h3",
             # "id_bolsao",
             # "bolsao_latitude",
@@ -170,19 +167,38 @@ def treat_data(response):
             # "geometry_bolsao_buffer_0.002",
         ]
     ]
-    exploded_df = cameras.explode("identifications")
-    cameras_identifications = pd.DataFrame(
-        exploded_df["identifications"].tolist(), index=exploded_df.index
+
+    cameras_identifications_explode = explode_df(
+        cameras_attr, "identifications"
+    )  # noqa
+
+    cameras_identifications_explode = cameras_identifications_explode.rename(
+        columns={"id": "object_id"}
+    ).rename(columns={"camera_id": "id"})
+    cameras_identifications_explode = cameras_identifications_explode.rename(
+        columns={
+            "snapshot.id": "snapshot_id",
+            "snapshot.camera_id": "snapshot_camera_id",
+            "snapshot.image_url": "snapshot_url",
+            "snapshot.timestamp": "snapshot_timestamp",
+        }
     )
 
-    cameras_identifications["timestamp"] = pd.to_datetime(
-        cameras_identifications["timestamp"]
+    cameras_identifications_explode["timestamp"] = pd.to_datetime(
+        cameras_identifications_explode["timestamp"]
     ).dt.tz_convert("America/Sao_Paulo")
-    cameras_identifications = cameras_identifications.sort_values(
-        ["timestamp", "label"], ascending=False
+
+    cameras_identifications_explode["snapshot_timestamp"] = pd.to_datetime(
+        cameras_identifications_explode["snapshot_timestamp"]
+    ).dt.tz_convert("America/Sao_Paulo")
+
+    cameras_identifications_explode = (
+        cameras_identifications_explode.sort_values(  # noqa
+            ["timestamp", "label"], ascending=False
+        )
     )
 
-    return cameras_attr, cameras_identifications
+    return cameras_identifications_explode
 
 
 def explode_df(dataframe, column_to_explode, prefix=None):
@@ -212,40 +228,20 @@ def get_objetcs_labels_df(objects, keep_null=False):
 
 
 def get_filted_cameras_objects(
-    cameras_attr, cameras_identifications, object_filter, label_filter
-):
+    cameras_identifications, object_filter, label_filter
+):  # noqa
     # filter both dfs by object and label
-    cameras_filter = cameras_attr[
-        cameras_attr.index.isin(
-            cameras_identifications[
-                cameras_identifications["object"] == object_filter
-            ].index
-        )
-    ]
 
     cameras_identifications_filter = cameras_identifications[
         (cameras_identifications["object"] == object_filter)
         & (cameras_identifications["label"].isin(label_filter))
     ]
 
-    # show cameras dfs
-    cameras_identifications_merged = pd.merge(
-        cameras_filter, cameras_identifications_filter, on="id"
-    )
-    cameras_identifications_merged = cameras_identifications_merged.sort_values(  # noqa
+    cameras_identifications_filter = cameras_identifications_filter.sort_values(  # noqa
         by=["timestamp", "label"], ascending=False
     )
-    cameras_identifications_merged["old_snapshot"] = np.where(
-        cameras_identifications_merged["snapshot_timestamp"]
-        > cameras_identifications_merged["timestamp"],
-        "Sim",
-        "Não",
-    )
-    return (
-        cameras_identifications_merged,
-        cameras_filter,
-        cameras_identifications_filter,
-    )
+
+    return cameras_identifications_filter
 
 
 def get_icon_color(label: Union[bool, None], type=None):
@@ -335,10 +331,10 @@ def create_map(chart_data, location=None):
 
 
 def display_camera_details(row, cameras_identifications):
-    camera_id = row.name
+    camera_id = row["id"]
     image_url = row["snapshot_url"]
     camera_name = row["name"]
-    snapshot_timestamp = row["snapshot_timestamp"].strftime("%d/%m/%Y %H:%M")  # noqa
+    # snapshot_timestamp = row["snapshot_timestamp"].strftime("%d/%m/%Y %H:%M")  # noqa
 
     st.markdown(f"### 📷 Camera snapshot")  # noqa
     st.markdown(f"Endereço: {camera_name}")
@@ -355,8 +351,10 @@ def display_camera_details(row, cameras_identifications):
         st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("### 📃 Detalhes")
+    camera_identifications = cameras_identifications[
+        cameras_identifications["id"] == camera_id
+    ]  # noqa
 
-    camera_identifications = cameras_identifications.loc[camera_id]  # noqa
     camera_identifications = camera_identifications.reset_index(drop=True)
 
     camera_identifications[""] = camera_identifications["label"].apply(
@@ -411,7 +409,7 @@ def display_agrid_table(table):
         wrapText=True,
         hide=True,
     )
-    gb.configure_column("old_snapshot", header_name="Predição Desatualizada")
+    # gb.configure_column("old_snapshot", header_name="Predição Desatualizada")
     gb.configure_side_bar()
     gb.configure_selection("single", use_checkbox=False)
     gb.configure_grid_options(enableCellTextSelection=True)
