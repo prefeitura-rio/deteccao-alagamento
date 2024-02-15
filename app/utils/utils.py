@@ -224,6 +224,9 @@ def get_objetcs_labels_df(objects, keep_null=False):
         labels = labels[~labels["value"].isin(["null"])]
     labels = labels.rename(columns={"label_id": "label"})
     labels = labels.reset_index(drop=True)
+
+    mask = (labels["value"] == "null") & (labels["name"] != "image_description")  # noqa
+    labels = labels[~mask]
     return labels
 
 
