@@ -1,8 +1,10 @@
-import os
-import requests
-import json
+# -*- coding: utf-8 -*-
 import base64
 import io
+import json
+import os
+
+import requests
 from PIL import Image
 
 
@@ -67,4 +69,3 @@ def run_model(img, prompt):
     response = vision_ai_classify_image(base64_image, prompt)
 
     return get_ai_label(response)
-
