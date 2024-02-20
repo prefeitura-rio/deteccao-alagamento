@@ -11,6 +11,28 @@ from st_aggrid import GridUpdateMode  # noqa
 from st_aggrid import AgGrid, ColumnsAutoSizeMode  # noqa
 from utils.api import APIVisionAI
 
+TRADUTOR = {
+    "image_corrupted": "imagem corrompida",
+    "image_description": "descrição da imagem",
+    "rain": "chuva",
+    "water_level": "nível da água",
+    "traffic": "tráfego",
+    "road_blockade": "bloqueio de estrada",
+    "false": "falso",
+    "true": "verdadeiro",
+    "null": "nulo",
+    "low": "baixo",
+    "medium": "médio",
+    "high": "alto",
+    "easy": "fácil",
+    "moderate": "moderado",
+    "difficult": "difícil",
+    "impossible": "impossível",
+    "free": "livre",
+    "partially": "parcialmente",
+    "totally": "totalmente",
+}
+
 
 def get_vision_ai_api():
     def user_is_logged_in():
@@ -198,6 +220,8 @@ def treat_data(response):
         )
     )
 
+    # st.dataframe(cameras_identifications_explode)
+
     # remove "image_description" from the objects
     cameras_identifications_explode = cameras_identifications_explode[
         cameras_identifications_explode["object"] != "image_description"
@@ -218,36 +242,13 @@ def treat_data(response):
         ["object", "order"]
     )
 
-    # complete the dictionary bellow with the translation of the terms to portuguese
-    tradutor = {
-        "image_corrupted": "imagem corrompida",
-        "image_description": "descrição da imagem",
-        "rain": "chuva",
-        "water_level": "nível da água",
-        "traffic": "tráfego",
-        "road_blockade": "bloqueio de estrada",
-        "false": "falso",
-        "true": "verdadeiro",
-        "null": "nulo",
-        "low": "baixo",
-        "medium": "médio",
-        "high": "alto",
-        "easy": "fácil",
-        "moderate": "moderado",
-        "difficult": "difícil",
-        "impossible": "impossível",
-        "free": "livre",
-        "partially": "parcialmente",
-        "totally": "totalmente",
-    }
-
     # translate the labels of the columns object and label to portuguese using the dictionary above
     cameras_identifications_explode["object"] = cameras_identifications_explode[
         "object"
-    ].map(tradutor)
+    ].map(TRADUTOR)
     cameras_identifications_explode["label"] = cameras_identifications_explode[
         "label"
-    ].map(tradutor)
+    ].map(TRADUTOR)
 
     # print("Here are the cameras_identifications_explode")
     # print(cameras_identifications_explode)
@@ -302,7 +303,7 @@ def get_filted_cameras_objects(
 
 
 def get_icon_color(label: Union[bool, None], type=None):
-    if label in [
+    red = [
         "major",
         "totally_blocked",
         "impossible",
@@ -312,23 +313,17 @@ def get_icon_color(label: Union[bool, None], type=None):
         "flodding",
         "high",
         "totally",
-    ]:  # noqa
-        if type == "emoji":
-            return "🔴"
-        return "red"
-
-    elif label in [
+    ]
+    orange = [
         "minor",
         "partially_blocked",
         "difficult",
         "puddle",
         "medium",
         "partially",
-    ]:
-        if type == "emoji":
-            return "🟠"
-        return "orange"
-    elif label in [
+    ]
+
+    green = [
         "normal",
         "free",
         "easy",
@@ -337,10 +332,19 @@ def get_icon_color(label: Union[bool, None], type=None):
         "false",
         "low_indifferent",
         "low",
-    ]:
+    ]
+    if label in [TRADUTOR.get(label) for label in red]:  # noqa
+        if type == "emoji":
+            return "🔴"
+        return "red"
+
+    elif label in [TRADUTOR.get(label) for label in orange]:
+        if type == "emoji":
+            return "🟠"
+        return "orange"
+    elif label in [TRADUTOR.get(label) for label in green]:
         if type == "emoji":
             return "🟢"
-
         return "green"
     else:
         if type == "emoji":
