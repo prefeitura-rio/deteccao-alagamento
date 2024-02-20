@@ -220,25 +220,25 @@ def treat_data(response):
 
     # complete the dictionary bellow with the translation of the terms to portuguese
     tradutor = {
-        'image_corrupted': 'imagem corrompida',
-        'image_description': 'descrição da imagem',
-        'rain': 'chuva',
-        'water_level': 'nível da água',
-        'traffic': 'tráfego',
-        'road_blockade': 'bloqueio de estrada',
-        'false': 'falso',
-        'true': 'verdadeiro',
-        'null': 'nulo',
-        'low': 'baixo',
-        'medium': 'médio',
-        'high': 'alto',
-        'easy': 'fácil',
-        'moderate': 'moderado',
-        'difficult': 'difícil',
-        'impossible': 'impossível',
-        'free': 'livre',
-        'partially': 'parcialmente',
-        'totally': 'totalmente',
+        "image_corrupted": "imagem corrompida",
+        "image_description": "descrição da imagem",
+        "rain": "chuva",
+        "water_level": "nível da água",
+        "traffic": "tráfego",
+        "road_blockade": "bloqueio de estrada",
+        "false": "falso",
+        "true": "verdadeiro",
+        "null": "nulo",
+        "low": "baixo",
+        "medium": "médio",
+        "high": "alto",
+        "easy": "fácil",
+        "moderate": "moderado",
+        "difficult": "difícil",
+        "impossible": "impossível",
+        "free": "livre",
+        "partially": "parcialmente",
+        "totally": "totalmente",
     }
 
     # translate the labels of the columns object and label to portuguese using the dictionary above
@@ -490,6 +490,7 @@ def display_agrid_table(table):
     selected_row = grid_response["selected_rows"]
 
     return selected_row
+
 
 def create_order_column(table):
     # dict with the order of the labels from the worst to the best

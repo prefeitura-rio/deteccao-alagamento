@@ -113,7 +113,7 @@ if len(cameras_identifications) > 0:
         # sort the table first by object then by the column order
         aggrid_table = aggrid_table.sort_values(
             by=["object", "order"], ascending=[True, True]
-        )    
+        )
 
         aggrid_table = aggrid_table[selected_cols]
         st.markdown("### 📈 Identificações")
@@ -154,7 +154,7 @@ if len(cameras_identifications) > 0:
 
             display_camera_details(
                 row=row, cameras_identifications=cameras_identifications
-            ) #noqa    
+            )  # noqa
         else:
             st.markdown(
                 """
