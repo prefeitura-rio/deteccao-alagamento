@@ -5,7 +5,11 @@ import pandas as pd
 import streamlit as st
 from utils.utils import explode_df, get_objects_cache, get_objetcs_labels_df
 
-st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Classificador de Labels",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 # st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Classificador de labels | Vision AI")
