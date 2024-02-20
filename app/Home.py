@@ -49,12 +49,15 @@ if st.button("Update Data"):
     cameras = fetch_and_update_data(bypass_cash=True)
     st.success("Data updated successfully!")
 
+
 cameras_identifications = treat_data(cameras)
+# st.dataframe(cameras_identifications)
 
 if len(cameras_identifications) > 0:
 
     col1, col2 = st.columns(2)
     with col1:
+
         objects = cameras_identifications["object"].unique().tolist()
         objects.sort()
         # dropdown to filter by object
@@ -88,7 +91,9 @@ if len(cameras_identifications) > 0:
         )
 
     cameras_identifications_filter = get_filted_cameras_objects(
-        cameras_identifications, object_filter, label_filter
+        cameras_identifications_df=cameras_identifications,
+        object_filter=object_filter,
+        label_filter=label_filter,
     )
     # make two cols
     col1, col2 = st.columns(2)
@@ -133,7 +138,7 @@ if len(cameras_identifications) > 0:
             )
 
             display_camera_details(
-                row=row, cameras_identifications=cameras_identifications
+                row=row, cameras_identifications_df=cameras_identifications
             )  # noqa
         # if there is are ann object and label selected but no row is selected then select the first camera of the aggrid table
         elif object_filter and not selected_row and label_filter != []:
@@ -152,7 +157,7 @@ if len(cameras_identifications) > 0:
             )
 
             display_camera_details(
-                row=row, cameras_identifications=cameras_identifications
+                row=row, cameras_identifications_df=cameras_identifications
             )  # noqa
         else:
             st.markdown(
@@ -169,7 +174,7 @@ if len(cameras_identifications) > 0:
     # for camera_id in cameras_identifications_filter.index:
     #     row = cameras_filter.loc[camera_id]
     #     display_camera_details(
-    #         row=row, cameras_identifications=cameras_identifications
+    #         row=row, cameras_identifications_df=cameras_identifications
     #     )
     #     time.sleep(2)
 else:

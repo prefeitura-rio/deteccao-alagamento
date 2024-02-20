@@ -166,6 +166,7 @@ def treat_data(response):
     if len(cameras) == 0:
         return None, None
     cameras = cameras.merge(cameras_aux, on="camera_id", how="left")
+    # st.dataframe(cameras)
 
     cameras_attr = cameras[
         [
@@ -220,8 +221,6 @@ def treat_data(response):
         )
     )
 
-    # st.dataframe(cameras_identifications_explode)
-
     # remove "image_description" from the objects
     cameras_identifications_explode = cameras_identifications_explode[
         cameras_identifications_explode["object"] != "image_description"
@@ -232,11 +231,10 @@ def treat_data(response):
         cameras_identifications_explode["label"] != "null"
     ]
 
-    # create a column order to sort the labels
+    # # create a column order to sort the labels
     cameras_identifications_explode = create_order_column(
         cameras_identifications_explode
     )
-
     # sort the table first by object then by the column order
     cameras_identifications_explode = cameras_identifications_explode.sort_values(
         ["object", "order"]
@@ -286,20 +284,22 @@ def get_objetcs_labels_df(objects, keep_null=False):
 
 
 def get_filted_cameras_objects(
-    cameras_identifications, object_filter, label_filter
+    cameras_identifications_df, object_filter, label_filter
 ):  # noqa
     # filter both dfs by object and label
 
-    cameras_identifications_filter = cameras_identifications[
-        (cameras_identifications["object"] == object_filter)
-        & (cameras_identifications["label"].isin(label_filter))
+    cameras_identifications_filter_df = cameras_identifications_df[
+        (cameras_identifications_df["object"] == object_filter)
+        & (cameras_identifications_df["label"].isin(label_filter))
     ]
 
-    cameras_identifications_filter = cameras_identifications_filter.sort_values(  # noqa
-        by=["timestamp", "label"], ascending=False
+    cameras_identifications_filter_df = (
+        cameras_identifications_filter_df.sort_values(  # noqa
+            by=["timestamp", "label"], ascending=False
+        )
     )
 
-    return cameras_identifications_filter
+    return cameras_identifications_filter_df
 
 
 def get_icon_color(label: Union[bool, None], type=None):
@@ -391,7 +391,7 @@ def create_map(chart_data, location=None):
     return m
 
 
-def display_camera_details(row, cameras_identifications):
+def display_camera_details(row, cameras_identifications_df):
     camera_id = row["id"]
     image_url = row["snapshot_url"]
     camera_name = row["name"]
@@ -412,8 +412,8 @@ def display_camera_details(row, cameras_identifications):
         st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("### 📃 Detalhes")
-    camera_identifications = cameras_identifications[
-        cameras_identifications["id"] == camera_id
+    camera_identifications = cameras_identifications_df[
+        cameras_identifications_df["id"] == camera_id
     ]  # noqa
 
     camera_identifications = camera_identifications.reset_index(drop=True)
