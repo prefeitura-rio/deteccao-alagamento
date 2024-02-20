@@ -445,10 +445,11 @@ def display_camera_details(row, cameras_identifications):
         columns=rename_columns
     )  # noqa
 
-    
     # make a markdown with the first row of the dataframe and the first value of "Data Identificação"
     first_row = camera_identifications.iloc[0]
-    markdown = f'<p><strong>Data Identificação:</strong> {first_row["Data Identificação"]}</p>'
+    markdown = (
+        f'<p><strong>Data Identificação:</strong> {first_row["Data Identificação"]}</p>'
+    )
     st.markdown(markdown, unsafe_allow_html=True)
     i = 0
     markdown = ""
@@ -471,36 +472,36 @@ def display_camera_details(row, cameras_identifications):
 
         # if i is even and not the last row
         if i % 2 == 0 and i != len(camera_identifications) - 1:
-            markdown += (f"""
+            markdown += f"""
             <div style="display: flex; margin-bottom: 10px;">
                 <div style="flex: 1; border: 3px solid #ccc; border-radius: 5px; padding: 10px; margin-right: 10px;">
                     <p><strong>{identificador}</strong></p>
                     <p><strong>{classificacao}</strong></p>
                     <p><strong>Descrição:</strong> {row["Descrição"]}</p>
-                </div>""")
+                </div>"""
         # if it is the last row, make it complete the row
         elif i == len(camera_identifications) - 1:
-            markdown += (f"""
+            markdown += f"""
                 <div style="flex: 1; border: 3px solid #ccc; border-radius: 5px; padding: 10px; margin-right: 10px;">
                     <p><strong>{identificador}</strong></p>
                     <p><strong>{classificacao}</strong></p>
                     <p><strong>Descrição:</strong> {row["Descrição"]}</p>
                 </div>
             </div>  <!-- Close the row here -->
-            """)
+            """
             st.markdown(markdown, unsafe_allow_html=True)
             markdown = ""
         else:
-            markdown += (f"""
+            markdown += f"""
                 <div style="flex: 1; border: 3px solid #ccc; border-radius: 5px; padding: 10px; margin-right: 10px;">
                     <p><strong>{identificador}</strong></p>
                     <p><strong>{classificacao}</strong></p>
                     <p><strong>Descrição:</strong> {row["Descrição"]}</p>
                 </div>
             </div>  <!-- Close the row here -->
-            """)
+            """
             st.markdown(markdown, unsafe_allow_html=True)
-            markdown = ""                         
+            markdown = ""
         i += 1
 
 
@@ -595,6 +596,7 @@ def create_order_column(table):
 
     return table
 
+
 def translate_back_to_english(label):
     tradutor = {
         "image_corrupted": "imagem corrompida",
@@ -622,6 +624,7 @@ def translate_back_to_english(label):
     if label in tradutor.values():
         label = list(tradutor.keys())[list(tradutor.values()).index(label)]
     return label
+
 
 def classify_label(label):
     if label in [

@@ -14,7 +14,9 @@ from utils.utils import (
     treat_data,
 )
 
-st.set_page_config(page_title="Vision AI - Rio", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Vision AI - Rio", layout="wide", initial_sidebar_state="collapsed"
+)
 # st.image("./data/logo/logo.png", width=300)
 
 DEFAULT_OBJECT = "nível da água"
