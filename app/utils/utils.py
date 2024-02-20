@@ -208,11 +208,11 @@ def treat_data(response):
     )
 
     cameras_identifications_explode["timestamp"] = pd.to_datetime(
-        cameras_identifications_explode["timestamp"]
+        cameras_identifications_explode["timestamp"], format="ISO8601"
     ).dt.tz_convert("America/Sao_Paulo")
 
     cameras_identifications_explode["snapshot_timestamp"] = pd.to_datetime(
-        cameras_identifications_explode["snapshot_timestamp"]
+        cameras_identifications_explode["snapshot_timestamp"], format="ISO8601"
     ).dt.tz_convert("America/Sao_Paulo")
 
     cameras_identifications_explode = (
@@ -418,6 +418,8 @@ def display_camera_details(row, cameras_identifications_df):
         cameras_identifications_df["id"] == camera_id
     ]  # noqa
 
+    # st.dataframe(camera_identifications)
+
     camera_identifications = camera_identifications.reset_index(drop=True)
 
     camera_identifications[""] = camera_identifications["label"].apply(
@@ -454,8 +456,7 @@ def display_camera_details(row, cameras_identifications_df):
     i = 0
     markdown = ""
     for _, row in camera_identifications.iterrows():
-        critic_level = classify_label(translate_back_to_english(row["Classificação"]))
-
+        critic_level = get_icon_color(row["Classificação"])
         # if critic_level = green, make classificacao have the color green and all capital letters
         if critic_level == "green":
             classificacao = f'<span style="color: green; text-transform: uppercase;">{row["Classificação"].upper()}</span>'
@@ -469,7 +470,6 @@ def display_camera_details(row, cameras_identifications_df):
             classificacao = row["Classificação"].upper()
         # capitalize the identificador
         identificador = row["Identificador"].capitalize()
-
         # if i is even and not the last row
         if i % 2 == 0 and i != len(camera_identifications) - 1:
             markdown += f"""
@@ -595,72 +595,3 @@ def create_order_column(table):
     )
 
     return table
-
-
-def translate_back_to_english(label):
-    tradutor = {
-        "image_corrupted": "imagem corrompida",
-        "image_description": "descrição da imagem",
-        "rain": "chuva",
-        "water_level": "nível da água",
-        "traffic": "tráfego",
-        "road_blockade": "bloqueio de estrada",
-        "false": "falso",
-        "true": "verdadeiro",
-        "null": "nulo",
-        "low": "baixo",
-        "medium": "médio",
-        "high": "alto",
-        "easy": "fácil",
-        "moderate": "moderado",
-        "difficult": "difícil",
-        "impossible": "impossível",
-        "free": "livre",
-        "partially": "parcialmente",
-        "totally": "totalmente",
-    }
-
-    # if label in tradutor.values, label = key
-    if label in tradutor.values():
-        label = list(tradutor.keys())[list(tradutor.values()).index(label)]
-    return label
-
-
-def classify_label(label):
-    if label in [
-        "major",
-        "totally_blocked",
-        "impossible",
-        "impossibe",
-        "poor",
-        "true",
-        "flodding",
-        "high",
-        "totally",
-    ]:  # noqa
-        return "red"
-
-    elif label in [
-        "minor",
-        "partially_blocked",
-        "difficult",
-        "puddle",
-        "medium",
-        "moderate",
-        "partially",
-    ]:
-        return "orange"
-    elif label in [
-        "normal",
-        "free",
-        "easy",
-        "clean",
-        "false",
-        "low_indifferent",
-        "low",
-    ]:
-        return "green"
-    else:
-        if type == "emoji":
-            return "⚫"
-        return "grey"
