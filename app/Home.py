@@ -14,7 +14,7 @@ from utils.utils import (
     treat_data,
 )
 
-st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Vision AI - Rio", layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
 DEFAULT_OBJECT = "nível da água"
@@ -98,12 +98,11 @@ if len(cameras_identifications) > 0:
     with col1:
         selected_cols = [
             "index",
-            "id",
             "object",
             "label",
-            "timestamp",
-            "snapshot_timestamp",
             "bairro",
+            "timestamp",
+            "id",
         ]
         aggrid_table = cameras_identifications_filter.copy()
         aggrid_table["index"] = aggrid_table["label"].apply(
@@ -114,6 +113,10 @@ if len(cameras_identifications) > 0:
         aggrid_table = aggrid_table.sort_values(
             by=["object", "order"], ascending=[True, True]
         )
+
+        # capitalize the values of the columns object and label
+        aggrid_table["object"] = aggrid_table["object"].str.capitalize()
+        aggrid_table["label"] = aggrid_table["label"].str.capitalize()
 
         aggrid_table = aggrid_table[selected_cols]
         st.markdown("### 📈 Identificações")
