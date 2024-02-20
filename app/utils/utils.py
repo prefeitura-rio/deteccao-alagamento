@@ -198,6 +198,60 @@ def treat_data(response):
         )
     )
 
+    # remove "image_description" from the objects
+    cameras_identifications_explode = cameras_identifications_explode[
+        cameras_identifications_explode["object"] != "image_description"
+    ]
+
+    # remove "null" from the labels
+    cameras_identifications_explode = cameras_identifications_explode[
+        cameras_identifications_explode["label"] != "null"
+    ]
+
+    # create a column order to sort the labels
+    cameras_identifications_explode = create_order_column(
+        cameras_identifications_explode
+    )
+
+    # sort the table first by object then by the column order
+    cameras_identifications_explode = cameras_identifications_explode.sort_values(
+        ["object", "order"]
+    )
+
+    # complete the dictionary bellow with the translation of the terms to portuguese
+    tradutor = {
+        'image_corrupted': 'imagem corrompida',
+        'image_description': 'descrição da imagem',
+        'rain': 'chuva',
+        'water_level': 'nível da água',
+        'traffic': 'tráfego',
+        'road_blockade': 'bloqueio de estrada',
+        'false': 'falso',
+        'true': 'verdadeiro',
+        'null': 'nulo',
+        'low': 'baixo',
+        'medium': 'médio',
+        'high': 'alto',
+        'easy': 'fácil',
+        'moderate': 'moderado',
+        'difficult': 'difícil',
+        'impossible': 'impossível',
+        'free': 'livre',
+        'partially': 'parcialmente',
+        'totally': 'totalmente',
+    }
+
+    # translate the labels of the columns object and label to portuguese using the dictionary above
+    cameras_identifications_explode["object"] = cameras_identifications_explode[
+        "object"
+    ].map(tradutor)
+    cameras_identifications_explode["label"] = cameras_identifications_explode[
+        "label"
+    ].map(tradutor)
+
+    # print("Here are the cameras_identifications_explode")
+    # print(cameras_identifications_explode)
+
     return cameras_identifications_explode
 
 
@@ -436,3 +490,43 @@ def display_agrid_table(table):
     selected_row = grid_response["selected_rows"]
 
     return selected_row
+
+def create_order_column(table):
+    # dict with the order of the labels from the worst to the best
+    order = {
+        "road_blockade": [
+            "totally",
+            "partially",
+            "free",
+        ],
+        "traffic": [
+            "impossible",
+            "difficult",
+            "moderate",
+            "easy",
+        ],
+        "rain": [
+            "true",
+            "false",
+        ],
+        "water_level": [
+            "high",
+            "medium",
+            "low",
+        ],
+        "image_corrupted": [
+            "true",
+            "false",
+        ],
+    }
+
+    # create a column order with the following rules:
+    # 1. if the object is not in the order keys dict, return 99
+    # 2. if the object is in the order keys, return the index of the label in the order list
+
+    # knowing that the dataframe always have the columns object and label, we can use the following code
+    table["order"] = table.apply(
+        lambda row: order.get(row["object"], 99).index(row["label"]), axis=1
+    )
+
+    return table

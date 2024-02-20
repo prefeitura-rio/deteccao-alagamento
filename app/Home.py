@@ -17,7 +17,7 @@ from utils.utils import (
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 # st.image("./data/logo/logo.png", width=300)
 
-DEFAULT_OBJECT = "water_level"
+DEFAULT_OBJECT = "nível da água"
 st.markdown("## Identificações | Vision AI")
 
 
@@ -109,8 +109,13 @@ if len(cameras_identifications) > 0:
         aggrid_table["index"] = aggrid_table["label"].apply(
             lambda label: get_icon_color(label=label, type="emoji")
         )
+
+        # sort the table first by object then by the column order
+        aggrid_table = aggrid_table.sort_values(
+            by=["object", "order"], ascending=[True, True]
+        )    
+
         aggrid_table = aggrid_table[selected_cols]
-        # aggrid_table = aggrid_table[selected_cols]
         st.markdown("### 📈 Identificações")
         selected_row = display_agrid_table(aggrid_table)  # noqa
 
@@ -131,6 +136,25 @@ if len(cameras_identifications) > 0:
             display_camera_details(
                 row=row, cameras_identifications=cameras_identifications
             )  # noqa
+        # if there is are ann object and label selected but no row is selected then select the first camera of the aggrid table
+        elif object_filter and not selected_row and label_filter != []:
+            camera_id = aggrid_table.head(1)["id"]
+            # convert camera_id to string
+            camera_id = camera_id.iloc[0]
+            row = cameras_identifications_filter[
+                cameras_identifications_filter["id"] == camera_id
+            ]
+            # get first row
+            row = row.head(1).to_dict("records")[0]
+            camera_location = [row["latitude"], row["longitude"]]
+            folium_map = create_map(
+                cameras_identifications_filter,
+                location=camera_location,  # noqa
+            )
+
+            display_camera_details(
+                row=row, cameras_identifications=cameras_identifications
+            ) #noqa    
         else:
             st.markdown(
                 """

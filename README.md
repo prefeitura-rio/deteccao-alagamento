@@ -7,4 +7,4 @@
 
 Add .env vars missing from .env.example.
 
-`export POETRY_DOTENV_LOCATION=.env && streamlit run app/📣\ Home.py`
+`export POETRY_DOTENV_LOCATION=.env && streamlit run app/Home.py`
