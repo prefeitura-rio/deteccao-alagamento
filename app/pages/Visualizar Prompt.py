@@ -11,7 +11,9 @@ from utils.utils import (
     get_prompts_cache,
 )
 
-st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Visualizar Prompt", layout="wide", initial_sidebar_state="collapsed"
+)
 # st.image("./data/logo/logo.png", width=300)
 
 st.markdown("# Visualizar Prompt | Vision AI")

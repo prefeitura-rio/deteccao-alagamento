@@ -11,6 +11,28 @@ from st_aggrid import GridUpdateMode  # noqa
 from st_aggrid import AgGrid, ColumnsAutoSizeMode  # noqa
 from utils.api import APIVisionAI
 
+TRADUTOR = {
+    "image_corrupted": "imagem corrompida",
+    "image_description": "descrição da imagem",
+    "rain": "chuva",
+    "water_level": "nível da água",
+    "traffic": "tráfego",
+    "road_blockade": "bloqueio de estrada",
+    "false": "falso",
+    "true": "verdadeiro",
+    "null": "nulo",
+    "low": "baixo",
+    "medium": "médio",
+    "high": "alto",
+    "easy": "fácil",
+    "moderate": "moderado",
+    "difficult": "difícil",
+    "impossible": "impossível",
+    "free": "livre",
+    "partially": "parcialmente",
+    "totally": "totalmente",
+}
+
 
 def get_vision_ai_api():
     def user_is_logged_in():
@@ -144,6 +166,7 @@ def treat_data(response):
     if len(cameras) == 0:
         return None, None
     cameras = cameras.merge(cameras_aux, on="camera_id", how="left")
+    # st.dataframe(cameras)
 
     cameras_attr = cameras[
         [
@@ -185,11 +208,11 @@ def treat_data(response):
     )
 
     cameras_identifications_explode["timestamp"] = pd.to_datetime(
-        cameras_identifications_explode["timestamp"]
+        cameras_identifications_explode["timestamp"], format="ISO8601"
     ).dt.tz_convert("America/Sao_Paulo")
 
     cameras_identifications_explode["snapshot_timestamp"] = pd.to_datetime(
-        cameras_identifications_explode["snapshot_timestamp"]
+        cameras_identifications_explode["snapshot_timestamp"], format="ISO8601"
     ).dt.tz_convert("America/Sao_Paulo")
 
     cameras_identifications_explode = (
@@ -197,6 +220,39 @@ def treat_data(response):
             ["timestamp", "label"], ascending=False
         )
     )
+
+    # remove "image_description" from the objects
+    cameras_identifications_explode = cameras_identifications_explode[
+        cameras_identifications_explode["object"] != "image_description"
+    ]
+
+    # remove "null" from the labels
+    cameras_identifications_explode = cameras_identifications_explode[
+        cameras_identifications_explode["label"] != "null"
+    ]
+
+    # # create a column order to sort the labels
+    cameras_identifications_explode = create_order_column(
+        cameras_identifications_explode
+    )
+    # sort the table first by object then by the column order
+    cameras_identifications_explode = cameras_identifications_explode.sort_values(
+        ["object", "order"]
+    )
+
+    # translate the labels of the columns object and label to portuguese using the dictionary above
+    cameras_identifications_explode["object"] = cameras_identifications_explode[
+        "object"
+    ].map(TRADUTOR)
+    cameras_identifications_explode["label"] = cameras_identifications_explode[
+        "label"
+    ].map(TRADUTOR)
+
+    # # print one random row of the dataframe in list format so I can see all the columns
+    # print(cameras_identifications_explode.sample(1).values.tolist())
+
+    # # print all columns of cameras_identifications_explode
+    # print(cameras_identifications_explode.columns)
 
     return cameras_identifications_explode
 
@@ -231,24 +287,26 @@ def get_objetcs_labels_df(objects, keep_null=False):
 
 
 def get_filted_cameras_objects(
-    cameras_identifications, object_filter, label_filter
+    cameras_identifications_df, object_filter, label_filter
 ):  # noqa
     # filter both dfs by object and label
 
-    cameras_identifications_filter = cameras_identifications[
-        (cameras_identifications["object"] == object_filter)
-        & (cameras_identifications["label"].isin(label_filter))
+    cameras_identifications_filter_df = cameras_identifications_df[
+        (cameras_identifications_df["object"] == object_filter)
+        & (cameras_identifications_df["label"].isin(label_filter))
     ]
 
-    cameras_identifications_filter = cameras_identifications_filter.sort_values(  # noqa
-        by=["timestamp", "label"], ascending=False
+    cameras_identifications_filter_df = (
+        cameras_identifications_filter_df.sort_values(  # noqa
+            by=["timestamp", "label"], ascending=False
+        )
     )
 
-    return cameras_identifications_filter
+    return cameras_identifications_filter_df
 
 
 def get_icon_color(label: Union[bool, None], type=None):
-    if label in [
+    red = [
         "major",
         "totally_blocked",
         "impossible",
@@ -258,35 +316,38 @@ def get_icon_color(label: Union[bool, None], type=None):
         "flodding",
         "high",
         "totally",
-    ]:  # noqa
-        if type == "emoji":
-            return "🔴"
-        return "red"
-
-    elif label in [
+    ]
+    orange = [
         "minor",
         "partially_blocked",
         "difficult",
         "puddle",
         "medium",
+        "moderate",
         "partially",
-    ]:
-        if type == "emoji":
-            return "🟠"
-        return "orange"
-    elif label in [
+    ]
+
+    green = [
         "normal",
         "free",
         "easy",
-        "moderate",
         "clean",
         "false",
         "low_indifferent",
         "low",
-    ]:
+    ]
+    if label in [TRADUTOR.get(label) for label in red]:  # noqa
+        if type == "emoji":
+            return "🔴"
+        return "red"
+
+    elif label in [TRADUTOR.get(label) for label in orange]:
+        if type == "emoji":
+            return "🟠"
+        return "orange"
+    elif label in [TRADUTOR.get(label) for label in green]:
         if type == "emoji":
             return "🟢"
-
         return "green"
     else:
         if type == "emoji":
@@ -333,7 +394,7 @@ def create_map(chart_data, location=None):
     return m
 
 
-def display_camera_details(row, cameras_identifications):
+def display_camera_details(row, cameras_identifications_df):
     camera_id = row["id"]
     image_url = row["snapshot_url"]
     camera_name = row["name"]
@@ -348,15 +409,16 @@ def display_camera_details(row, cameras_identifications):
         st.markdown("Falha ao capturar o snapshot da câmera.")
     else:
         st.markdown(
-            f"""<img src='{image_url}' style='max-width: 100%; max-height: 371px;'> """,  # noqa
+            f"""<img src='{image_url}' style='max-width: 100%; max-height: 371px;'> """,
             unsafe_allow_html=True,
         )
-        st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("### 📃 Detalhes")
-    camera_identifications = cameras_identifications[
-        cameras_identifications["id"] == camera_id
+    camera_identifications = cameras_identifications_df[
+        cameras_identifications_df["id"] == camera_id
     ]  # noqa
+
+    # st.dataframe(camera_identifications)
 
     camera_identifications = camera_identifications.reset_index(drop=True)
 
@@ -376,7 +438,7 @@ def display_camera_details(row, cameras_identifications):
     rename_columns = {
         "timestamp": "Data Identificação",
         "object": "Identificador",
-        "label": "Label",
+        "label": "Classificação",
         "label_explanation": "Descrição",
     }
     camera_identifications = camera_identifications[list(rename_columns.keys())]  # noqa
@@ -385,25 +447,81 @@ def display_camera_details(row, cameras_identifications):
         columns=rename_columns
     )  # noqa
 
-    st.dataframe(camera_identifications)
+    # make a markdown with the first row of the dataframe and the first value of "Data Identificação"
+    first_row = camera_identifications.iloc[0]
+    markdown = (
+        f'<p><strong>Data Identificação:</strong> {first_row["Data Identificação"]}</p>'
+    )
+    st.markdown(markdown, unsafe_allow_html=True)
+    i = 0
+    markdown = ""
+    for _, row in camera_identifications.iterrows():
+        critic_level = get_icon_color(row["Classificação"])
+        # if critic_level = green, make classificacao have the color green and all capital letters
+        if critic_level == "green":
+            classificacao = f'<span style="color: green; text-transform: uppercase;">{row["Classificação"].upper()}</span>'
+        # if critic_level = orange, make classificacao have the color orange and all capital letters
+        elif critic_level == "orange":
+            classificacao = f'<span style="color: orange; text-transform: uppercase;">{row["Classificação"].upper()}</span>'
+        # if critic_level = red, make classificacao have the color red and all capital letters
+        elif critic_level == "red":
+            classificacao = f'<span style="color: red; text-transform: uppercase;">{row["Classificação"].upper()}</span>'
+        else:
+            classificacao = row["Classificação"].upper()
+        # capitalize the identificador
+        identificador = row["Identificador"].capitalize()
+        # if i is even and not the last row
+        if i % 2 == 0 and i != len(camera_identifications) - 1:
+            markdown += f"""
+            <div style="display: flex; margin-bottom: 10px;">
+                <div style="flex: 1; border: 3px solid #ccc; border-radius: 5px; padding: 10px; margin-right: 10px;">
+                    <p><strong>{identificador}</strong></p>
+                    <p><strong>{classificacao}</strong></p>
+                    <p><strong>Descrição:</strong> {row["Descrição"]}</p>
+                </div>"""
+        # if it is the last row, make it complete the row
+        elif i == len(camera_identifications) - 1:
+            markdown += f"""
+                <div style="flex: 1; border: 3px solid #ccc; border-radius: 5px; padding: 10px; margin-right: 10px;">
+                    <p><strong>{identificador}</strong></p>
+                    <p><strong>{classificacao}</strong></p>
+                    <p><strong>Descrição:</strong> {row["Descrição"]}</p>
+                </div>
+            </div>  <!-- Close the row here -->
+            """
+            st.markdown(markdown, unsafe_allow_html=True)
+            markdown = ""
+        else:
+            markdown += f"""
+                <div style="flex: 1; border: 3px solid #ccc; border-radius: 5px; padding: 10px; margin-right: 10px;">
+                    <p><strong>{identificador}</strong></p>
+                    <p><strong>{classificacao}</strong></p>
+                    <p><strong>Descrição:</strong> {row["Descrição"]}</p>
+                </div>
+            </div>  <!-- Close the row here -->
+            """
+            st.markdown(markdown, unsafe_allow_html=True)
+            markdown = ""
+        i += 1
 
 
 def display_agrid_table(table):
     gb = GridOptionsBuilder.from_dataframe(table, index=True)  # noqa
 
     gb.configure_column("index", header_name="", pinned="left")
-    gb.configure_column("id", header_name="ID Camera", pinned="left")  # noqa
     gb.configure_column("object", header_name="Identificador", wrapText=True)
-    gb.configure_column("label", header_name="Label", wrapText=True)
+    gb.configure_column("label", header_name="Classificação", wrapText=True)
+    gb.configure_column("bairro", header_name="Bairro", wrapText=True)
+    gb.configure_column("id", header_name="ID Camera", pinned="right")  # noqa
     gb.configure_column(
         "timestamp", header_name="Data Identificação", wrapText=True
     )  # noqa
-    gb.configure_column(
-        "snapshot_timestamp",
-        header_name="Data Snapshot",
-        hide=False,
-        wrapText=True,  # noqa
-    )  # noqa
+    # gb.configure_column(
+    #     "snapshot_timestamp",
+    #     header_name="Data Snapshot",
+    #     hide=False,
+    #     wrapText=True,  # noqa
+    # )  # noqa
     gb.configure_column(
         "label_explanation",
         header_name="Descrição",
@@ -436,3 +554,44 @@ def display_agrid_table(table):
     selected_row = grid_response["selected_rows"]
 
     return selected_row
+
+
+def create_order_column(table):
+    # dict with the order of the labels from the worst to the best
+    order = {
+        "road_blockade": [
+            "totally",
+            "partially",
+            "free",
+        ],
+        "traffic": [
+            "impossible",
+            "difficult",
+            "moderate",
+            "easy",
+        ],
+        "rain": [
+            "true",
+            "false",
+        ],
+        "water_level": [
+            "high",
+            "medium",
+            "low",
+        ],
+        "image_corrupted": [
+            "true",
+            "false",
+        ],
+    }
+
+    # create a column order with the following rules:
+    # 1. if the object is not in the order keys dict, return 99
+    # 2. if the object is in the order keys, return the index of the label in the order list
+
+    # knowing that the dataframe always have the columns object and label, we can use the following code
+    table["order"] = table.apply(
+        lambda row: order.get(row["object"], 99).index(row["label"]), axis=1
+    )
+
+    return table
