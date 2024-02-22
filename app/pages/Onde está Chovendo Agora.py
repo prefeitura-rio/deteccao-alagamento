@@ -3,11 +3,16 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="Onde está Chovendo Agora", layout="wide", initial_sidebar_state="collapsed"
+    page_title="Onde está Chovendo Agora",
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 # embed a webpage that covers all screen
-st.write(f'<iframe src="https://www.dados.rio/chuvas/onde-esta-chovendo-agora" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden;"></iframe>', unsafe_allow_html=True)
+st.write(
+    f'<iframe src="https://www.dados.rio/chuvas/onde-esta-chovendo-agora" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden;"></iframe>',
+    unsafe_allow_html=True,
+)
 
 # Position the text at the specified location with custom styling
 st.write(
@@ -18,5 +23,5 @@ st.write(
         </div>
     </a>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
