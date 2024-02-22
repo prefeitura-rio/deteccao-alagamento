@@ -34,7 +34,7 @@ def load_alagamento_detectado_ia():
     )
 
     # filter only flooded cameras
-    dataframe = dataframe[dataframe["label"] == True]
+    dataframe = dataframe[dataframe["label"] is True]
 
     return dataframe, last_update
 
