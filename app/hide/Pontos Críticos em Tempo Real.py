@@ -32,7 +32,7 @@ def create_map(chart_data):
             icon=folium.features.DivIcon(
                 icon_size=(15, 15),
                 icon_anchor=(7, 7),
-                html=f'<div style="width: 10px; height: 10px; background-color: {chart_data.iloc[i]["color"]}; border: 1px solid black; border-radius: 50%;"></div>',
+                html=f'<div style="width: 10px; height: 10px; background-color: {chart_data.iloc[i]["color"]}; border: 1px solid black; border-radius: 50%;"></div>',  # noqa
             ),
         ).add_to(m)
 
@@ -147,7 +147,7 @@ st.markdown("### Acompanhe os Pontos Críticos em Tempo Real")
 
 pontos_criticos = update_precipitacao()
 
-## Tabela com pontos de atenção
+# Tabela com pontos de atenção
 st.dataframe(
     pontos_criticos[
         [
